@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -26,7 +27,7 @@ namespace FACEIT.FaceService.Implementations
         public FacesManager(HttpClient httpClient, string endpoint, string apiKey,ILogger<FacesManager> logger)
         {
             _httpClient = httpClient;
-            _endpoint = endpoint;
+            _endpoint = endpoint.TrimEnd('/');
             _apiKey = apiKey;
             _logger = logger;
         }
@@ -42,19 +43,26 @@ namespace FACEIT.FaceService.Implementations
                 return response;
             }
 
+            if(!groupId.IsValidGroupId())
+            {
+                response.Success = false;
+                response.Message = "Group ID is not valid (cannot contains spaces or uppercase letter).";
+                return response;
+            }
+
             if (string.IsNullOrWhiteSpace(name))
             {
                 response.Success = false;
                 response.Message = "Group name cannot be null or empty.";
                 return response;
             }
-
+            
             var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}";
 
             var group = new Group() { Id = groupId, Name = name, Data = groupData };
 
-            using var requestContent = new ByteArrayContent(Encoding.UTF8.GetBytes(group.ToJson(_recognitionModel)));
-            requestContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            var groupJson = group.ToJson(_recognitionModel);
+            using var requestContent = new StringContent(groupJson, Encoding.UTF8, "application/json");
             requestContent.Headers.Add("Ocp-Apim-Subscription-Key", _apiKey);
 
             try
@@ -96,7 +104,5 @@ namespace FACEIT.FaceService.Implementations
         {
             throw new NotImplementedException();
         }
-    }
-    {
     }
 }

@@ -10,12 +10,7 @@ namespace FACEIT.Core.Entities
     {
         public static string ToJson(this Group group, string recognitionModel)
         {
-            return $@"
-            {{
-                ""name"": ""{group.Name}"",
-                ""userData"": ""{group.Data}"",
-                ""recognitionModel"": ""{recognitionModel}""
-            }}";
+            return $@"{{ ""name"": ""{group.Name}"", ""userData"": ""{group.Data}"", ""recognitionModel"": ""{recognitionModel}"" }}";
         }
     }
 }
