@@ -401,3 +401,4 @@ FodyWeavers.xsd
 /Properties
 *.local.json
 *.local.development.json
+*.local.txt
