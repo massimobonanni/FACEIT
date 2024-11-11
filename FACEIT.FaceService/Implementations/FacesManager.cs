@@ -1,17 +1,9 @@
 ﻿using FACEIT.Core.Entities;
 using FACEIT.Core.Interfaces;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Reflection.Metadata;
-using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json;
+using Group = FACEIT.Core.Entities.Group;
 
 namespace FACEIT.FaceService.Implementations
 {
@@ -95,9 +87,41 @@ namespace FACEIT.FaceService.Implementations
             throw new NotImplementedException();
         }
 
-        public Task<Response<IEnumerable<Group>>> GetGroupsAsync(CancellationToken token = default)
+        public async Task<Response<IEnumerable<Group>>> GetGroupsAsync(CancellationToken token = default)
         {
-            throw new NotImplementedException();
+            var response = new Response<IEnumerable<Group>>();
+
+            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups";
+
+            using var request = new HttpRequestMessage(HttpMethod.Get, serviceUrl);
+            request.Headers.Add("Ocp-Apim-Subscription-Key", _apiKey);
+
+            try
+            {
+                var faceResponse = await _httpClient.SendAsync(request, token);
+
+                if (faceResponse.IsSuccessStatusCode)
+                {
+                    var responseData = await faceResponse.Content.ReadAsStringAsync();
+                    var groups = JsonSerializer.Deserialize<IEnumerable<FaceService.Entities.Group>>(responseData);
+
+                    response.Data = groups.Select(g=> g.ToCoreGroup()).ToList();
+                }
+                else
+                {
+                    response.Success = false;
+                    response.Message = faceResponse.ReasonPhrase;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving groups");
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+
+            return response;
         }
 
         public Task<Response> RemoveGroupAsync(string groupId, CancellationToken token = default)

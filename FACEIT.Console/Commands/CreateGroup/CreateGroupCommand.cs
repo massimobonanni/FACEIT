@@ -3,11 +3,11 @@ using FACEIT.Console.Utilities;
 using FACEIT.Core.Interfaces;
 using System.CommandLine;
 
-namespace AOAIFineTuning.FTFilesGenerator.Commands.GenerateJSONLCommand
+namespace FACEIT.Console.Commands.CreateGroup
 {
     internal class CreateGroupCommand : Command
     {
-        public CreateGroupCommand() : base("create-group", "Generate JSONL file from csv file")
+        public CreateGroupCommand() : base("create-group", "Create a new group")
         {
             var endpointOption = new Option<string>(
                 name: "--endpoint",
@@ -66,8 +66,8 @@ namespace AOAIFineTuning.FTFilesGenerator.Commands.GenerateJSONLCommand
             var response = await facesManager.CreateGroupAsync(groupId, groupName, groupData);
 
             if (response.Success)
-            { 
-                ConsoleUtility.WriteLineWithTimestamp($"Group {groupName} with id {groupId} created successfully.",ConsoleColor.Green);
+            {
+                ConsoleUtility.WriteLineWithTimestamp($"Group {groupName} with id {groupId} created successfully.", ConsoleColor.Green);
             }
             else
             {
