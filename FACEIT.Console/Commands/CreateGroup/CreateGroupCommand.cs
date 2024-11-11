@@ -64,6 +64,15 @@ namespace AOAIFineTuning.FTFilesGenerator.Commands.GenerateJSONLCommand
             ConsoleUtility.WriteLineWithTimestamp($"Creating group {groupName} with id {groupId}.");
 
             var response = await facesManager.CreateGroupAsync(groupId, groupName, groupData);
+
+            if (response.Success)
+            { 
+                ConsoleUtility.WriteLineWithTimestamp($"Group {groupName} with id {groupId} created successfully.",ConsoleColor.Green);
+            }
+            else
+            {
+                ConsoleUtility.WriteLineWithTimestamp($"Failed to create group {groupName} with id {groupId}. {response.Message}", ConsoleColor.Red);
+            }
         }
 
 
