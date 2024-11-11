@@ -1,0 +1,11 @@
+C:\Sviluppo\FACEIT\FACEIT.Core\bin\Debug\net8.0\FACEIT.Core.deps.json
+C:\Sviluppo\FACEIT\FACEIT.Core\bin\Debug\net8.0\FACEIT.Core.dll
+C:\Sviluppo\FACEIT\FACEIT.Core\bin\Debug\net8.0\FACEIT.Core.pdb
+C:\Sviluppo\FACEIT\FACEIT.Core\obj\Debug\net8.0\FACEIT.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Sviluppo\FACEIT\FACEIT.Core\obj\Debug\net8.0\FACEIT.Core.AssemblyInfoInputs.cache
+C:\Sviluppo\FACEIT\FACEIT.Core\obj\Debug\net8.0\FACEIT.Core.AssemblyInfo.cs
+C:\Sviluppo\FACEIT\FACEIT.Core\obj\Debug\net8.0\FACEIT.Core.csproj.CoreCompileInputs.cache
+C:\Sviluppo\FACEIT\FACEIT.Core\obj\Debug\net8.0\FACEIT.Core.dll
+C:\Sviluppo\FACEIT\FACEIT.Core\obj\Debug\net8.0\refint\FACEIT.Core.dll
+C:\Sviluppo\FACEIT\FACEIT.Core\obj\Debug\net8.0\FACEIT.Core.pdb
+C:\Sviluppo\FACEIT\FACEIT.Core\obj\Debug\net8.0\ref\FACEIT.Core.dll
