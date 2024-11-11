@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FACEIT.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cf043efce50c97eb8116593667fe159641331006")]
 [assembly: System.Reflection.AssemblyProductAttribute("FACEIT.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FACEIT.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
