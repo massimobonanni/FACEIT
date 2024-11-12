@@ -3,11 +3,11 @@ using FACEIT.Console.Utilities;
 using FACEIT.Core.Interfaces;
 using System.CommandLine;
 
-namespace FACEIT.Console.Commands.GetGroup
+namespace FACEIT.Console.Commands.RemoveGroupCommand
 {
-    internal class GetGroupCommand : Command
+    internal class RemoveGroupCommand : Command
     {
-        public GetGroupCommand() : base("get-group", "Returns the information of a group")
+        public RemoveGroupCommand() : base("remove-group", "Remove a group")
         {
             var endpointOption = new Option<string>(
                 name: "--endpoint",
@@ -42,20 +42,23 @@ namespace FACEIT.Console.Commands.GetGroup
 
         private async Task CommandHandler(string endpoint, string apiKey, string groupId, IFacesManager facesManager)
         {
-            ConsoleUtility.WriteLineWithTimestamp($"Retrieving group {groupId}");
+            ConsoleUtility.WriteLineWithTimestamp($"Deleting group {groupId}");
 
-            var response = await facesManager.GetGroupAsync(groupId);
+            var response = await facesManager.RemoveGroupAsync(groupId);
 
             if (response.Success)
             {
-                ConsoleUtility.WriteLine($"Group ID: {response.Data.Id}, Name: {response.Data.Name}, Data: {response.Data.Data}");
+                ConsoleUtility.WriteLine($"Group ID: {groupId} removed");
             }
             else
             {
-                ConsoleUtility.WriteLineWithTimestamp($"Failed to retrieve group. {response.Message}", ConsoleColor.Red);
+                ConsoleUtility.WriteLineWithTimestamp($"Failed to delete group. {response.Message}", ConsoleColor.Red);
             }
         }
 
+
+
     }
+
 
 }

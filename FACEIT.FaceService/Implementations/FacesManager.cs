@@ -180,9 +180,48 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
-        public Task<Response> RemoveGroupAsync(string groupId, CancellationToken token = default)
+        public async Task<Response> RemoveGroupAsync(string groupId, CancellationToken token = default)
         {
-            throw new NotImplementedException();
+            var response = new Response();
+
+            if (string.IsNullOrWhiteSpace(groupId))
+            {
+                response.Success = false;
+                response.Message = "Group ID cannot be null or empty.";
+                return response;
+            }
+
+            if (!groupId.IsValidGroupId())
+            {
+                response.Success = false;
+                response.Message = "Group ID is not valid (cannot contains spaces or uppercase letter).";
+                return response;
+            }
+
+            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}";
+
+            using var request = new HttpRequestMessage(HttpMethod.Delete, serviceUrl);
+            request.Headers.Add("Ocp-Apim-Subscription-Key", _apiKey);
+
+            try
+            {
+                var faceResponse = await _httpClient.SendAsync(request, token);
+
+                if (!faceResponse.IsSuccessStatusCode)
+                {
+                    response.Success = false;
+                    response.Message = faceResponse.ReasonPhrase;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving groups");
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+
+            return response;
         }
     }
 }

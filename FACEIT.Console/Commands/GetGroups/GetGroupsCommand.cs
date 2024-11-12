@@ -39,12 +39,17 @@ namespace FACEIT.Console.Commands.GetGroups
 
             if (response.Success)
             {
-                ConsoleUtility.WriteLine();
-                foreach (var group in response.Data)
+                if (response.Data.Any())
                 {
-                    ConsoleUtility.WriteLine($"Group ID: {group.Id}, Name: {group.Name}, Data: {group.Data}");
+                    foreach (var group in response.Data)
+                    {
+                        ConsoleUtility.WriteLine($"Group ID: {group.Id}, Name: {group.Name}, Data: {group.Data}");
+                    }
                 }
-                ConsoleUtility.WriteLine();
+                else
+                {
+                    ConsoleUtility.WriteLine("No groups found");
+                }
             }
             else
             {
