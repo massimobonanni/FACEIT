@@ -7,7 +7,7 @@ namespace FACEIT.Console.Commands.GetGroups
 {
     internal class GetGroupsCommand : Command
     {
-        public GetGroupsCommand() : base("get-groups", "return the list of existing groups")
+        public GetGroupsCommand() : base("get-groups", "Returns the list of existing groups")
         {
             var endpointOption = new Option<string>(
                 name: "--endpoint",
