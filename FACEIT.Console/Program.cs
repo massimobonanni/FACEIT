@@ -1,4 +1,5 @@
-﻿using FACEIT.Console.Commands.CreateGroup;
+﻿using FACEIT.Console.Commands.AddImageToPerson;
+using FACEIT.Console.Commands.CreateGroup;
 using FACEIT.Console.Commands.CreatePerson;
 using FACEIT.Console.Commands.GetGroup;
 using FACEIT.Console.Commands.GetGroups;
@@ -16,7 +17,7 @@ namespace FACEIT.Console
         {
             ConsoleUtility.WriteApplicationBanner();
 
-            var rootCommand = new RootCommand("Console for managing FACEIT stuff");
+            var rootCommand = new RootCommand("Console for managing FACEIT features");
             
             rootCommand.AddCommand(new CreateGroupCommand());
             rootCommand.AddCommand(new GetGroupsCommand());
@@ -25,6 +26,7 @@ namespace FACEIT.Console
 
             rootCommand.AddCommand(new CreatePersonCommand());
             rootCommand.AddCommand(new GetPersonsCommand());
+            rootCommand.AddCommand(new AddImageToPersonCommand());
 
             return await rootCommand.InvokeAsync(args);
         }
