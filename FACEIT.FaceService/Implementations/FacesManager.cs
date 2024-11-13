@@ -157,21 +157,37 @@ namespace FACEIT.FaceService.Implementations
         {
             var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}/train";
 
-            var httpResponse = await SendRequestAsync<string>(HttpMethod.Post, serviceUrl, null, token);
-            var response = new Response();
+            return await SendRequestAsync<string>(HttpMethod.Post, serviceUrl, null, token);
+        }
 
-            if (!httpResponse.Success )
+        public async Task<Response<string>> GetTrainingStatusAsync(string groupId, CancellationToken token = default)
+        {
+            var response = new Response<string>();
+
+            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}/training";
+
+            var httpResponse = await SendRequestAsync<string>(HttpMethod.Get, serviceUrl, null, token);
+
+            if (httpResponse.Success && httpResponse.Data != null)
+            {
+                using var document = JsonDocument.Parse(httpResponse.Data);
+                if (document.RootElement.TryGetProperty("status", out var status))
+                {
+                    response.Data = status.GetString();
+                }
+                else
+                {
+                    response.Success = false;
+                    response.Message = "Generic error during status retrieving";
+                }
+            }
+            else
             {
                 response.Success = false;
                 response.Message = httpResponse.Message;
             }
 
             return response;
-        }
-
-        public Task<Response<string>> GetTrainingStatusAsync(string groupId, CancellationToken token = default)
-        {
-            throw new NotImplementedException();
         }
         #endregion [ IGroupsManager interface ]
 
