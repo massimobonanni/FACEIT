@@ -152,6 +152,30 @@ namespace FACEIT.FaceService.Implementations
 
             return response;
         }
+
+        public async Task<Response> TrainGroupAsync(string groupId, CancellationToken token = default)
+        {
+            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}/train";
+
+            var httpResponse = await SendRequestAsync<string>(HttpMethod.Post, serviceUrl, null, token);
+            var response = new Response();
+
+            if (!httpResponse.Success )
+            {
+                response.Success = false;
+                response.Message = httpResponse.Message;
+            }
+
+            return response;
+        }
+
+        public Task<Response<string>> GetTrainingStatusAsync(string groupId, CancellationToken token = default)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion [ IGroupsManager interface ]
+
+        #region [ IPersonsManager interface ]
         public async Task<Response<string>> AddImageToPersonAsync(string groupId, string personId, Stream imageData, CancellationToken token = default)
         {
             var response = new Response<string>();

@@ -5,6 +5,7 @@ using FACEIT.Console.Commands.GetGroup;
 using FACEIT.Console.Commands.GetGroups;
 using FACEIT.Console.Commands.GetPersons;
 using FACEIT.Console.Commands.RemoveGroupCommand;
+using FACEIT.Console.Commands.TrainGroup;
 using FACEIT.Console.Utilities;
 using System.CommandLine;
 
@@ -23,6 +24,7 @@ namespace FACEIT.Console
             rootCommand.AddCommand(new GetGroupsCommand());
             rootCommand.AddCommand(new GetGroupCommand());
             rootCommand.AddCommand(new RemoveGroupCommand());
+            rootCommand.AddCommand(new TrainGroupCommand());
 
             rootCommand.AddCommand(new CreatePersonCommand());
             rootCommand.AddCommand(new GetPersonsCommand());

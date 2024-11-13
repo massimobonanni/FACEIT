@@ -11,5 +11,7 @@ namespace FACEIT.Core.Interfaces
         Task<Response<Group>> GetGroupAsync(string groupId, CancellationToken token = default);
         Task<Response<IEnumerable<Group>>> GetGroupsAsync(CancellationToken token = default);
         Task<Response> RemoveGroupAsync(string groupId, CancellationToken token = default);
+        Task<Response> TrainGroupAsync(string groupId, CancellationToken token = default);
+        Task<Response<string>> GetTrainingStatusAsync(string groupId, CancellationToken token = default);
     }
 }
