@@ -36,19 +36,18 @@ namespace FACEIT.Console.Commands.GetGroup
             groupIdOption.AddAlias("-gi");
             AddOption(groupIdOption);
 
-            this.SetHandler(CommandHandler,
-                endpointOption, apiKeyOption, groupIdOption, new FacesManagerBinder(endpointOption, apiKeyOption));
+            this.SetHandler(CommandHandler,groupIdOption, new GroupsManagerBinder(endpointOption, apiKeyOption));
         }
 
-        private async Task CommandHandler(string endpoint, string apiKey, string groupId, IFacesManager facesManager)
+        private async Task CommandHandler(string groupId, IGroupsManager groupsManager)
         {
             ConsoleUtility.WriteLineWithTimestamp($"Retrieving group {groupId}");
 
-            var response = await facesManager.GetGroupAsync(groupId);
+            var response = await groupsManager.GetGroupAsync(groupId);
 
             if (response.Success)
             {
-                ConsoleUtility.WriteLine($"Group ID: {response.Data.Id}, Name: {response.Data.Name}, Data: {response.Data.Data}");
+                ConsoleUtility.WriteLine($"Group ID: {response.Data.Id}, Name: {response.Data.Name}, Properties: {response.Data.Properties}");
             }
             else
             {

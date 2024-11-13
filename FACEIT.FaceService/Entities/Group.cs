@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
@@ -20,11 +21,17 @@ namespace FACEIT.FaceService.Entities
 
         internal Core.Entities.Group ToCoreGroup()
         {
+            IDictionary<string, string>? properties = null;
+            if (!string.IsNullOrEmpty(UserData))
+            {
+                properties = JsonSerializer.Deserialize<IDictionary<string, string>>(UserData);
+            }
+
             return new Core.Entities.Group()
             {
                 Id = PersonGroupId,
                 Name = Name,
-                Data = UserData
+                Properties = properties
             };
         }
     }

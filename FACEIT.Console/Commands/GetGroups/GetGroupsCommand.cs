@@ -27,15 +27,14 @@ namespace FACEIT.Console.Commands.GetGroups
             apiKeyOption.AddAlias("-k");
             AddOption(apiKeyOption);
 
-            this.SetHandler(CommandHandler,
-                endpointOption, apiKeyOption, new FacesManagerBinder(endpointOption, apiKeyOption));
+            this.SetHandler(CommandHandler,new GroupsManagerBinder(endpointOption, apiKeyOption));
         }
 
-        private async Task CommandHandler(string endpoint, string apiKey, IFacesManager facesManager)
+        private async Task CommandHandler(IGroupsManager groupsManager)
         {
             ConsoleUtility.WriteLineWithTimestamp($"Retrieving groups");
 
-            var response = await facesManager.GetGroupsAsync();
+            var response = await groupsManager.GetGroupsAsync();
 
             if (response.Success)
             {
@@ -43,7 +42,7 @@ namespace FACEIT.Console.Commands.GetGroups
                 {
                     foreach (var group in response.Data)
                     {
-                        ConsoleUtility.WriteLine($"Group ID: {group.Id}, Name: {group.Name}, Data: {group.Data}");
+                        ConsoleUtility.WriteLine($"Group ID: {group.Id}, Name: {group.Name}, Properties: {group.Properties.FormatProperties()}");
                     }
                 }
                 else

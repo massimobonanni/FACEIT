@@ -11,18 +11,18 @@ using System.Threading.Tasks;
 
 namespace FACEIT.Console.Binders
 {
-    internal class FacesManagerBinder : BinderBase<IFacesManager>
+    internal class PersonsManagerBinder : BinderBase<IPersonsManager>
     {
         private readonly Option<string> _endpointOption;
         private readonly Option<string> _apiKeyOption;
 
-        public FacesManagerBinder(Option<string> endpointOption, Option<string> apiKeyOption)
+        public PersonsManagerBinder(Option<string> endpointOption, Option<string> apiKeyOption)
         {
             _endpointOption = endpointOption;
             _apiKeyOption = apiKeyOption;
         }
 
-        protected override IFacesManager GetBoundValue(BindingContext bindingContext)
+        protected override IPersonsManager GetBoundValue(BindingContext bindingContext)
         {
             var endpoint = bindingContext.ParseResult.GetValueForOption(_endpointOption);
             var apiKey = bindingContext.ParseResult.GetValueForOption(_apiKeyOption);

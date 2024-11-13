@@ -45,25 +45,26 @@ namespace FACEIT.Console.Commands.CreateGroup
             groupNameOption.AddAlias("-gn");
             AddOption(groupNameOption);
 
-            var groupDataOption = new Option<string>(
-                name: "--group-data",
-                description: "The user data of the group.")
+            var groupPropertiesOption = new Option<IEnumerable<string>>(
+                name: "--group-properties",
+                description: "The properties of the group in the form 'key:value'.")
             {
                 IsRequired = false,
+                AllowMultipleArgumentsPerToken = true
             };
-            groupDataOption.AddAlias("-gd");
-            AddOption(groupDataOption);
+            groupPropertiesOption.AddAlias("-gp");
+            AddOption(groupPropertiesOption);
 
 
-            this.SetHandler(CommandHandler,
-                endpointOption, apiKeyOption, groupIdOption, groupNameOption, groupDataOption, new FacesManagerBinder(endpointOption, apiKeyOption));
+            this.SetHandler(CommandHandler,groupIdOption, groupNameOption, groupPropertiesOption, new GroupsManagerBinder(endpointOption, apiKeyOption));
         }
 
-        private async Task CommandHandler(string endpoint, string apiKey, string groupId, string groupName, string groupData, IFacesManager facesManager)
+        private async Task CommandHandler(string groupId, string groupName, IEnumerable<string> groupProperties, IGroupsManager groupsManager)
         {
             ConsoleUtility.WriteLineWithTimestamp($"Creating group {groupName} with id {groupId}.");
 
-            var response = await facesManager.CreateGroupAsync(groupId, groupName, groupData);
+            var properties = groupProperties.ToProperties();
+            var response = await groupsManager.CreateGroupAsync(groupId, groupName, properties);
 
             if (response.Success)
             {

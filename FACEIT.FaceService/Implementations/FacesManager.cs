@@ -1,6 +1,8 @@
 ﻿using FACEIT.Core.Entities;
 using FACEIT.Core.Interfaces;
+using FACEIT.FaceService.Utilities;
 using Microsoft.Extensions.Logging;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Group = FACEIT.Core.Entities.Group;
@@ -8,17 +10,17 @@ using Group = FACEIT.Core.Entities.Group;
 namespace FACEIT.FaceService.Implementations
 {
     ///  https://learn.microsoft.com/en-us/azure/ai-services/computer-vision/quickstarts-sdk/identity-client-library?tabs=windows%2Cvisual-studio&pivots=programming-language-rest-api
-    
-    public class FacesManager : IFacesManager
+
+    public class FacesManager : IGroupsManager, IPersonsManager
     {
         private readonly HttpClient _httpClient;
-
         private readonly string _endpoint;
         private readonly string _apiKey;
         private readonly ILogger<FacesManager> _logger;
+        private string _recognitionModel = "recognition_04"; // https://learn.microsoft.com/en-us/azure/ai-services/computer-vision/how-to/specify-recognition-model
+        private string _detectionModel = "detection_03"; // https://learn.microsoft.com/en-us/azure/ai-services/computer-vision/how-to/specify-detection-model
 
-        private string _recognitionModel = "recognition_04";
-        public FacesManager(HttpClient httpClient, string endpoint, string apiKey,ILogger<FacesManager> logger)
+        public FacesManager(HttpClient httpClient, string endpoint, string apiKey, ILogger<FacesManager> logger)
         {
             _httpClient = httpClient;
             _endpoint = endpoint.TrimEnd('/');
@@ -26,57 +28,40 @@ namespace FACEIT.FaceService.Implementations
             _logger = logger;
         }
 
-        public async Task<Response<Group>> CreateGroupAsync(string groupId, string name, string? groupData = null, CancellationToken token = default)
+        private async Task<Response<T>> SendRequestAsync<T>(HttpMethod method, string url, HttpContent? content = null, CancellationToken token = default)
         {
-            var response = new Response<Group>();
+            var response = new Response<T>();
 
-            if (string.IsNullOrWhiteSpace(groupId))
-            {
-                response.Success = false;
-                response.Message = "Group ID cannot be null or empty.";
-                return response;
-            }
-
-            if(!groupId.IsValidGroupId())
-            {
-                response.Success = false;
-                response.Message = "Group ID is not valid (cannot contains spaces or uppercase letter).";
-                return response;
-            }
-
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                response.Success = false;
-                response.Message = "Group name cannot be null or empty.";
-                return response;
-            }
-            
-            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}";
-
-            var group = new Group() { Id = groupId, Name = name, Data = groupData };
-
-            var groupJson = group.ToJson(_recognitionModel);
-            using var requestContent = new StringContent(groupJson, Encoding.UTF8, "application/json");
-            requestContent.Headers.Add("Ocp-Apim-Subscription-Key", _apiKey);
+            using var request = new HttpRequestMessage(method, url);
+            request.Headers.Add("Ocp-Apim-Subscription-Key", _apiKey);
+            if (content != null)
+                request.Content = content;
 
             try
             {
-                var faceResponse = await _httpClient.PutAsync(serviceUrl, requestContent, token);
+                var httpResponse = await _httpClient.SendAsync(request, token);
 
-                if (faceResponse.IsSuccessStatusCode)
+                if (httpResponse.IsSuccessStatusCode)
                 {
-                    response.Data = group;
+                    if (typeof(T) == typeof(string))
+                    {
+                        response.Data = (T)(object)(await httpResponse.Content.ReadAsStringAsync());
+                    }
+                    else
+                    {
+                        var responseData = await httpResponse.Content.ReadAsStringAsync();
+                        response.Data = JsonSerializer.Deserialize<T>(responseData);
+                    }
                 }
                 else
                 {
                     response.Success = false;
-                    response.Message = faceResponse.ReasonPhrase;
+                    response.Message = httpResponse.ReasonPhrase;
                 }
-
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating group {groupId}", groupId);
+                _logger.LogError(ex, "Error sending request to {url}", url);
                 response.Success = false;
                 response.Message = ex.Message;
             }
@@ -84,60 +69,65 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
-        public async Task<Response<Group>> GetGroupAsync(string groupId, CancellationToken token = default)
+        #region [ IGroupsManager interface ]
+        public async Task<Response<Group>> CreateGroupAsync(string groupId, string name, IDictionary<string, string>? properties = null, CancellationToken token = default)
         {
             var response = new Response<Group>();
 
-            if (string.IsNullOrWhiteSpace(groupId))
+            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage) ||
+                !ValidationUtility.ValidateGroupName(name, out errorMessage))
             {
                 response.Success = false;
-                response.Message = "Group ID cannot be null or empty.";
+                response.Message = errorMessage;
                 return response;
             }
 
-            if (!groupId.IsValidGroupId())
+            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}";
+            var group = new Group() { Id = groupId, Name = name, Properties = properties };
+            var groupJson = group.ToJson(_recognitionModel);
+            using var requestContent = new StringContent(groupJson, Encoding.UTF8, "application/json");
+
+            return await SendRequestAsync<Group>(HttpMethod.Put, serviceUrl, requestContent, token);
+        }
+
+        public async Task<Response> RemoveGroupAsync(string groupId, CancellationToken token = default)
+        {
+            var response = new Response();
+
+            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage))
             {
                 response.Success = false;
-                response.Message = "Group ID is not valid (cannot contains spaces or uppercase letter).";
+                response.Message = errorMessage;
                 return response;
             }
 
             var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}";
 
-            using var request = new HttpRequestMessage(HttpMethod.Get, serviceUrl);
-            request.Headers.Add("Ocp-Apim-Subscription-Key", _apiKey);
+            return await SendRequestAsync<string>(HttpMethod.Delete, serviceUrl, null, token);
+        }
 
-            try
+        public async Task<Response<Group>> GetGroupAsync(string groupId, CancellationToken token = default)
+        {
+            var response = new Response<Group>();
+
+            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage))
             {
-                var faceResponse = await _httpClient.SendAsync(request, token);
-
-                if (faceResponse.IsSuccessStatusCode)
-                {
-                    var responseData = await faceResponse.Content.ReadAsStringAsync();
-                    var group = JsonSerializer.Deserialize<FaceService.Entities.Group>(responseData);
-
-                    if (group!=null)
-                    {
-                        response.Data = group.ToCoreGroup();
-                    }
-                    else
-                    {
-                        response.Success = false;
-                        response.Message = "Group not found";
-                    }
-                }
-                else
-                {
-                    response.Success = false;
-                    response.Message = faceResponse.ReasonPhrase;
-                }
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving groups");
                 response.Success = false;
-                response.Message = ex.Message;
+                response.Message = errorMessage;
+                return response;
+            }
+
+            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}";
+
+            var httpResponse = await SendRequestAsync<FaceService.Entities.Group>(HttpMethod.Get, serviceUrl, null, token);
+            if (httpResponse.Success && httpResponse.Data != null)
+            {
+                response.Data = httpResponse.Data.ToCoreGroup();
+            }
+            else
+            {
+                response.Success = false;
+                response.Message = httpResponse.Message ?? "Group not found";
             }
 
             return response;
@@ -145,83 +135,135 @@ namespace FACEIT.FaceService.Implementations
 
         public async Task<Response<IEnumerable<Group>>> GetGroupsAsync(CancellationToken token = default)
         {
-            var response = new Response<IEnumerable<Group>>();
-
             var serviceUrl = $"{_endpoint}/face/v1.0/persongroups";
 
-            using var request = new HttpRequestMessage(HttpMethod.Get, serviceUrl);
-            request.Headers.Add("Ocp-Apim-Subscription-Key", _apiKey);
+            var httpResponse = await SendRequestAsync<IEnumerable<FaceService.Entities.Group>>(HttpMethod.Get, serviceUrl, null, token);
+            var response = new Response<IEnumerable<Group>>();
 
-            try
+            if (httpResponse.Success && httpResponse.Data != null)
             {
-                var faceResponse = await _httpClient.SendAsync(request, token);
+                response.Data = httpResponse.Data.Select(g => g.ToCoreGroup()).ToList();
+            }
+            else
+            {
+                response.Success = false;
+                response.Message = httpResponse.Message;
+            }
 
-                if (faceResponse.IsSuccessStatusCode)
+            return response;
+        }
+        public async Task<Response<string>> AddImageToPersonAsync(string groupId, string personId, Stream imageData, CancellationToken token = default)
+        {
+            var response = new Response<string>();
+
+            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage) ||
+                !ValidationUtility.ValidatePersonId(personId, out errorMessage))
+            {
+                response.Success = false;
+                response.Message = errorMessage;
+                return response;
+            }
+
+            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}/persons/{personId}/persistedfaces?detectionModel={_detectionModel}";
+
+            using var requestContent = new StreamContent(imageData);
+            requestContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+
+            var httpResponse = await SendRequestAsync<string>(HttpMethod.Post, serviceUrl, requestContent, token);
+
+            if (httpResponse.Success && httpResponse.Data != null)
+            {
+                using var document = JsonDocument.Parse(httpResponse.Data);
+                if (document.RootElement.TryGetProperty("persistedFaceId", out var persistedFaceIdElement))
                 {
-                    var responseData = await faceResponse.Content.ReadAsStringAsync();
-                    var groups = JsonSerializer.Deserialize<IEnumerable<FaceService.Entities.Group>>(responseData);
-
-                    response.Data = groups.Select(g=> g.ToCoreGroup()).ToList();
+                    response.Data = persistedFaceIdElement.GetString();
                 }
                 else
                 {
                     response.Success = false;
-                    response.Message = faceResponse.ReasonPhrase;
+                    response.Message = "Generic error during image addition";
                 }
-
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Error retrieving groups");
                 response.Success = false;
-                response.Message = ex.Message;
+                response.Message = httpResponse.Message;
             }
 
             return response;
         }
 
-        public async Task<Response> RemoveGroupAsync(string groupId, CancellationToken token = default)
+        public async Task<Response<Person>> CreatePersonAsync(string groupId, string personName, IDictionary<string, string>? properties = null, CancellationToken token = default)
         {
-            var response = new Response();
+            var response = new Response<Person>();
 
-            if (string.IsNullOrWhiteSpace(groupId))
+            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage) ||
+                !ValidationUtility.ValidatePersonName(personName, out errorMessage))
             {
                 response.Success = false;
-                response.Message = "Group ID cannot be null or empty.";
+                response.Message = errorMessage;
                 return response;
             }
 
-            if (!groupId.IsValidGroupId())
+            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}/persons";
+            var person = new Person() { Name = personName, Properties = properties };
+            var personJson = person.ToJson();
+            using var requestContent = new StringContent(personJson, Encoding.UTF8, "application/json");
+
+            var httpResponse = await SendRequestAsync<string>(HttpMethod.Post, serviceUrl, requestContent, token);
+
+            if (httpResponse.Success && httpResponse.Data != null)
             {
-                response.Success = false;
-                response.Message = "Group ID is not valid (cannot contains spaces or uppercase letter).";
-                return response;
-            }
-
-            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}";
-
-            using var request = new HttpRequestMessage(HttpMethod.Delete, serviceUrl);
-            request.Headers.Add("Ocp-Apim-Subscription-Key", _apiKey);
-
-            try
-            {
-                var faceResponse = await _httpClient.SendAsync(request, token);
-
-                if (!faceResponse.IsSuccessStatusCode)
+                using var document = JsonDocument.Parse(httpResponse.Data);
+                if (document.RootElement.TryGetProperty("personId", out var personIdElement))
+                {
+                    person.Id = personIdElement.GetString();
+                    response.Data = person;
+                }
+                else
                 {
                     response.Success = false;
-                    response.Message = faceResponse.ReasonPhrase;
+                    response.Message = "Generic error during person creation";
                 }
-
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Error retrieving groups");
                 response.Success = false;
-                response.Message = ex.Message;
+                response.Message = httpResponse.Message;
             }
 
             return response;
         }
+
+        public Task<Response<Person>> GetPersonAsync(string groupId, string personId, CancellationToken token = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<Response<IEnumerable<Person>>> GetPersonsByGroupAsync(string groupId, CancellationToken token = default)
+        {
+            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}/persons";
+
+            var httpResponse = await SendRequestAsync<IEnumerable<FaceService.Entities.Person>>(HttpMethod.Get, serviceUrl, null, token);
+            var response = new Response<IEnumerable<Person>>();
+
+            if (httpResponse.Success && httpResponse.Data != null)
+            {
+                response.Data = httpResponse.Data.Select(g => g.ToCorePerson()).ToList();
+            }
+            else
+            {
+                response.Success = false;
+                response.Message = httpResponse.Message;
+            }
+
+            return response;
+        }
+
+        public Task<Response> RemovePersonAsync(string groupId, string personId, CancellationToken token = default)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion [ IPersonsManager interface ]
     }
 }
