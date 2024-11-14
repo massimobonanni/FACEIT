@@ -3,11 +3,11 @@ using FACEIT.Console.Utilities;
 using FACEIT.Core.Interfaces;
 using System.CommandLine;
 
-namespace FACEIT.Console.Commands.GetPersons
+namespace FACEIT.Console.Commands.GetPerson
 {
-    internal class GetPersonsCommand : Command
+    internal class GetPersonCommand : Command
     {
-        public GetPersonsCommand() : base("get-persons", "Returns the list of persons in a specific group")
+        public GetPersonCommand() : base("get-person", "Returns a person in a specific group")
         {
             var endpointOption = new Option<string>(
                 name: "--endpoint",
@@ -26,7 +26,7 @@ namespace FACEIT.Console.Commands.GetPersons
             };
             apiKeyOption.AddAlias("-k");
             AddOption(apiKeyOption);
-            
+
             var groupIdOption = new Option<string>(
                 name: "--group-id",
                 description: "The id of the group.")
@@ -36,28 +36,27 @@ namespace FACEIT.Console.Commands.GetPersons
             groupIdOption.AddAlias("-gi");
             AddOption(groupIdOption);
 
-            this.SetHandler(CommandHandler, groupIdOption, new PersonsManagerBinder(endpointOption, apiKeyOption));
+            var personIdOption = new Option<string>(
+                name: "--person-id",
+                description: "The id of the person.")
+            {
+                IsRequired = true,
+            };
+            personIdOption.AddAlias("-pi");
+            AddOption(personIdOption);
+
+            this.SetHandler(CommandHandler, groupIdOption, personIdOption, new PersonsManagerBinder(endpointOption, apiKeyOption));
         }
 
-        private async Task CommandHandler(string groupId, IPersonsManager personsManager)
+        private async Task CommandHandler(string groupId, string personId, IPersonsManager personsManager)
         {
-            ConsoleUtility.WriteLineWithTimestamp($"Retrieving persons from the group {groupId}");
+            ConsoleUtility.WriteLineWithTimestamp($"Retrieving person {personId} from the group {groupId}");
 
-            var response = await personsManager.GetPersonsByGroupAsync(groupId);
+            var response = await personsManager.GetPersonAsync(groupId,personId);
 
             if (response.Success)
             {
-                if (response.Data.Any())
-                {
-                    foreach (var person in response.Data)
-                    {
-                        ConsoleUtility.DisplayPerson(person);
-                    }
-                }
-                else
-                {
-                    ConsoleUtility.WriteLine("No persons found");
-                }
+                ConsoleUtility.DisplayPerson(response.Data);
             }
             else
             {

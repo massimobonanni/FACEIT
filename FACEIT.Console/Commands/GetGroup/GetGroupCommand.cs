@@ -47,7 +47,7 @@ namespace FACEIT.Console.Commands.GetGroup
 
             if (response.Success)
             {
-                ConsoleUtility.WriteLine($"Group ID: {response.Data.Id}, Name: {response.Data.Name}, Properties: {response.Data.Properties}");
+                ConsoleUtility.DisplayGroup(response.Data);
             }
             else
             {

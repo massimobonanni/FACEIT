@@ -275,9 +275,24 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
-        public Task<Response<Person>> GetPersonAsync(string groupId, string personId, CancellationToken token = default)
+        public async Task<Response<Person>> GetPersonAsync(string groupId, string personId, CancellationToken token = default)
         {
-            throw new NotImplementedException();
+            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}/persons/{personId}";
+
+            var httpResponse = await SendRequestAsync<FaceService.Entities.Person>(HttpMethod.Get, serviceUrl, null, token);
+            var response = new Response<Person>();
+
+            if (httpResponse.Success && httpResponse.Data != null)
+            {
+                response.Data = httpResponse.Data.ToCorePerson();
+            }
+            else
+            {
+                response.Success = false;
+                response.Message = httpResponse.Message;
+            }
+
+            return response;
         }
 
         public async Task<Response<IEnumerable<Person>>> GetPersonsByGroupAsync(string groupId, CancellationToken token = default)

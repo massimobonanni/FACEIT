@@ -1,4 +1,5 @@
-﻿using Figgle;
+﻿using FACEIT.Core.Entities;
+using Figgle;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,6 +40,56 @@ namespace FACEIT.Console.Utilities
         {
             WriteLine();
             WriteLine(FiggleFonts.Banner.Render("FACEIT Console"), ConsoleColor.Green);
+            WriteLine();
+        }
+
+        public static void DisplayPerson(Person person)
+        {
+            WriteLine($"Person ID: {person.Id}");
+            WriteLine($"\tName: {person.Name}");
+            WriteLine($"\tProperties:");
+            if (person.Properties.Any())
+            {
+                foreach (var property in person.Properties)
+                {
+                    WriteLine($"\t\t{property.Key}: {property.Value}");
+                }
+            }
+            else
+            {
+                WriteLine($"\t\tNo properties found");
+            }
+            WriteLine($"\tPersisted faces:");
+            if (person.PersistedFaceIds.Any())
+            {
+                foreach (var persistedFaceId in person.PersistedFaceIds)
+                {
+                    WriteLine($"\t\t{persistedFaceId}");
+                }
+            }
+            else
+            {
+                WriteLine($"\t\tNo persisted faces found");
+            }
+            WriteLine();
+        }
+
+        public static void DisplayGroup(Group group)
+        {
+            WriteLine($"Group ID: {group.Id}");
+            WriteLine($"\tName: {group.Name}");
+            WriteLine($"\tProperties:");
+            if (group.Properties.Any())
+            {
+                foreach (var property in group.Properties)
+                {
+                    WriteLine($"\t\t{property.Key}: {property.Value}");
+                }
+            }
+            else
+            {
+                WriteLine($"\t\tNo properties found");
+            }
             WriteLine();
         }
     }

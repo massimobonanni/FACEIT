@@ -42,7 +42,7 @@ namespace FACEIT.Console.Commands.GetGroups
                 {
                     foreach (var group in response.Data)
                     {
-                        ConsoleUtility.WriteLine($"Group ID: {group.Id}, Name: {group.Name}, Properties: {group.Properties.FormatProperties()}");
+                        ConsoleUtility.DisplayGroup(group);
                     }
                 }
                 else
