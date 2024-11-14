@@ -1,4 +1,5 @@
 ﻿using FACEIT.Console.Commands.AddImageToPerson;
+using FACEIT.Console.Commands.ClearAll;
 using FACEIT.Console.Commands.CreateGroup;
 using FACEIT.Console.Commands.CreatePerson;
 using FACEIT.Console.Commands.GetGroup;
@@ -27,6 +28,7 @@ namespace FACEIT.Console
             rootCommand.AddCommand(new RemoveGroupCommand());
             rootCommand.AddCommand(new TrainGroupCommand());
             rootCommand.AddCommand(new GetTrainingStatusCommand());
+            rootCommand.AddCommand(new ClearAllCommand());
 
             rootCommand.AddCommand(new CreatePersonCommand());
             rootCommand.AddCommand(new GetPersonsCommand());

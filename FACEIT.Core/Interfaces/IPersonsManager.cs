@@ -16,5 +16,9 @@ namespace FACEIT.Core.Interfaces
         Task<Response<IEnumerable<Person>>> GetPersonsByGroupAsync(string groupId, CancellationToken token = default);
 
         Task<Response<Person>> GetPersonAsync(string groupId, string personId, CancellationToken token = default);
+
+        Task<Response<string>> RemoveImageFromPersonAsync(string groupId, string personId, string persistedImageId, CancellationToken token = default);
+
+        Task<Response> UpdatePersonAsync(string groupId, string personId, string name, IDictionary<string, string>? properties = null, CancellationToken token = default);
     }
 }

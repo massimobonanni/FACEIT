@@ -279,6 +279,35 @@ namespace FACEIT.FaceService.Implementations
             }
             return response;
         }
+
+
+        public Task<Core.Entities.Response> UpdateGroupAsync(string groupId, string name, IDictionary<string, string>? properties = null, CancellationToken token = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<Core.Entities.Response> ClearAllAsync(CancellationToken token = default)
+        {
+            var response = new Core.Entities.Response();
+
+            var groups = await this.GetGroupsAsync(token);
+
+            if (groups.Success)
+            {
+                foreach (var group in groups.Data)
+                {
+                    var deleteGroup=await this.RemoveGroupAsync(group.Id, token);
+                    if (!deleteGroup.Success)
+                    {
+                        response.Success = false;
+                        response.Message = deleteGroup.Message;
+                        return response;
+                    }
+                }
+            }
+
+            return response;
+        }
         #endregion [ IGroupsManager interface ]
 
         #region [ IPersonsManager interface ]
@@ -455,13 +484,24 @@ namespace FACEIT.FaceService.Implementations
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error removing person with ID {personId} from group with ID {groupId}", personId,groupId);
+                _logger.LogError(ex, "Unexpected error removing person with ID {personId} from group with ID {groupId}", personId, groupId);
                 response.Success = false;
                 response.Message = ex.Message;
             }
 
             return response;
         }
+
+        public Task<Core.Entities.Response<string>> RemoveImageFromPersonAsync(string groupId, string personId, string persistedImageId, CancellationToken token = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Core.Entities.Response> UpdatePersonAsync(string groupId, string personId, string name, IDictionary<string, string>? properties = null, CancellationToken token = default)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion [ IPersonsManager interface ]
     }
 }
