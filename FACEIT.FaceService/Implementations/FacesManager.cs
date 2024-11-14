@@ -1,5 +1,8 @@
-﻿using FACEIT.Core.Entities;
+﻿using Azure;
+using Azure.AI.Vision.Face;
+using FACEIT.Core.Entities;
 using FACEIT.Core.Interfaces;
+using FACEIT.FaceService.Entities;
 using FACEIT.FaceService.Utilities;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
@@ -17,8 +20,8 @@ namespace FACEIT.FaceService.Implementations
         private readonly string _endpoint;
         private readonly string _apiKey;
         private readonly ILogger<FacesManager> _logger;
-        private string _recognitionModel = "recognition_04"; // https://learn.microsoft.com/en-us/azure/ai-services/computer-vision/how-to/specify-recognition-model
-        private string _detectionModel = "detection_03"; // https://learn.microsoft.com/en-us/azure/ai-services/computer-vision/how-to/specify-detection-model
+        private FaceRecognitionModel _recognitionModel = FaceRecognitionModel.Recognition04; // https://learn.microsoft.com/en-us/azure/ai-services/computer-vision/how-to/specify-recognition-model
+        private FaceDetectionModel _detectionModel = FaceDetectionModel.Detection03;// https://learn.microsoft.com/en-us/azure/ai-services/computer-vision/how-to/specify-detection-model
 
         public FacesManager(HttpClient httpClient, string endpoint, string apiKey, ILogger<FacesManager> logger)
         {
@@ -28,9 +31,14 @@ namespace FACEIT.FaceService.Implementations
             _logger = logger;
         }
 
-        private async Task<Response<T>> SendRequestAsync<T>(HttpMethod method, string url, HttpContent? content = null, CancellationToken token = default)
+        private LargePersonGroupClient CreateLargePersonGroupClient(string groupId)
         {
-            var response = new Response<T>();
+            return new FaceAdministrationClient(new Uri(_endpoint), new AzureKeyCredential(_apiKey)).GetLargePersonGroupClient(groupId);
+        }
+
+        private async Task<Core.Entities.Response<T>> SendRequestAsync<T>(HttpMethod method, string url, HttpContent? content = null, CancellationToken token = default)
+        {
+            var response = new Core.Entities.Response<T>();
 
             using var request = new HttpRequestMessage(method, url);
             request.Headers.Add("Ocp-Apim-Subscription-Key", _apiKey);
@@ -70,75 +78,119 @@ namespace FACEIT.FaceService.Implementations
         }
 
         #region [ IGroupsManager interface ]
-        public async Task<Response<Group>> CreateGroupAsync(string groupId, string name, IDictionary<string, string>? properties = null, CancellationToken token = default)
+        public async Task<Core.Entities.Response<Group>> CreateGroupAsync(string groupId, string name, IDictionary<string, string>? properties = null, CancellationToken token = default)
         {
-            var response = new Response<Group>();
+            var response = new Core.Entities.Response<Group>();
 
             if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage) ||
-                !ValidationUtility.ValidateGroupName(name, out errorMessage))
+                            !ValidationUtility.ValidateGroupName(name, out errorMessage))
             {
                 response.Success = false;
                 response.Message = errorMessage;
                 return response;
             }
 
-            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}";
             var group = new Group() { Id = groupId, Name = name, Properties = properties };
-            var groupJson = group.ToJson(_recognitionModel);
-            using var requestContent = new StringContent(groupJson, Encoding.UTF8, "application/json");
 
-            return await SendRequestAsync<Group>(HttpMethod.Put, serviceUrl, requestContent, token);
-        }
-
-        public async Task<Response> RemoveGroupAsync(string groupId, CancellationToken token = default)
-        {
-            var response = new Response();
-
-            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage))
+            try
             {
+                LargePersonGroupClient client = CreateLargePersonGroupClient(groupId);
+                var faceResponse = await client.CreateAsync(group.Name, group.PropertiesToJson(), _recognitionModel, token);
+
+                if (!faceResponse.IsError)
+                {
+                    response.Data = group;
+                }
+                else
+                {
+                    response.Success = false;
+                    response.Message = faceResponse.ReasonPhrase;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error creating group with ID {groupId}", groupId);
                 response.Success = false;
-                response.Message = errorMessage;
-                return response;
+                response.Message = ex.Message;
             }
-
-            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}";
-
-            return await SendRequestAsync<string>(HttpMethod.Delete, serviceUrl, null, token);
-        }
-
-        public async Task<Response<Group>> GetGroupAsync(string groupId, CancellationToken token = default)
-        {
-            var response = new Response<Group>();
-
-            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage))
-            {
-                response.Success = false;
-                response.Message = errorMessage;
-                return response;
-            }
-
-            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}";
-
-            var httpResponse = await SendRequestAsync<FaceService.Entities.Group>(HttpMethod.Get, serviceUrl, null, token);
-            if (httpResponse.Success && httpResponse.Data != null)
-            {
-                response.Data = httpResponse.Data.ToCoreGroup();
-            }
-            else
-            {
-                response.Success = false;
-                response.Message = httpResponse.Message ?? "Group not found";
-            }
-
             return response;
         }
 
-        public async Task<Response<IEnumerable<Group>>> GetGroupsAsync(CancellationToken token = default)
+        public async Task<Core.Entities.Response> RemoveGroupAsync(string groupId, CancellationToken token = default)
         {
-            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups";
+            var response = new Core.Entities.Response();
+
+            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage))
+            {
+                response.Success = false;
+                response.Message = errorMessage;
+                return response;
+            }
+
+            try
+            {
+                LargePersonGroupClient client = CreateLargePersonGroupClient(groupId);
+
+                var faceResponse = await client.DeleteAsync();
+
+                if (faceResponse.IsError)
+                {
+                    response.Success = false;
+                    response.Message = faceResponse.ReasonPhrase;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error removing group with ID {groupId}", groupId);
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+            return response;
+        }
+
+
+        public async Task<Core.Entities.Response<Group>> GetGroupAsync(string groupId, CancellationToken token = default)
+        {
+            var response = new Core.Entities.Response<Group>();
+
+            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage))
+            {
+                response.Success = false;
+                response.Message = errorMessage;
+                return response;
+            }
+
+            try
+            {
+                var client = CreateLargePersonGroupClient(groupId);
+
+                var faceResponse = await client.GetLargePersonGroupAsync(cancellationToken: token);
+
+                if (!faceResponse.GetRawResponse().IsError)
+                {
+                    response.Data = faceResponse.Value.ToCoreGroup();
+                }
+                else
+                {
+                    response.Success = false;
+                    response.Message = faceResponse.GetRawResponse().ReasonPhrase;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error getting group with ID {groupId}", groupId);
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+            return response;
+        }
+
+        public async Task<Core.Entities.Response<IEnumerable<Group>>> GetGroupsAsync(CancellationToken token = default)
+        {
+            var serviceUrl = $"{_endpoint}/face/v1.0/largepersongroups";
 
             var httpResponse = await SendRequestAsync<IEnumerable<FaceService.Entities.Group>>(HttpMethod.Get, serviceUrl, null, token);
-            var response = new Response<IEnumerable<Group>>();
+            var response = new Core.Entities.Response<IEnumerable<Group>>();
 
             if (httpResponse.Success && httpResponse.Data != null)
             {
@@ -153,48 +205,86 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
-        public async Task<Response> TrainGroupAsync(string groupId, CancellationToken token = default)
-        {
-            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}/train";
+        //public async Task<Core.Entities.Response<IEnumerable<Group>>> GetGroupsAsync(CancellationToken token = default)
+        //{
+        //    var response = new Core.Entities.Response<IEnumerable<Group>>();
 
-            return await SendRequestAsync<string>(HttpMethod.Post, serviceUrl, null, token);
+        //    var client = CreateLargePersonGroupClient(null);
+
+        //    var faceResponse = await client.GetLargePersonGroupsAsync(cancellationToken: token);
+
+        //    if (!faceResponse.GetRawResponse().IsError)
+        //    {
+        //        response.Data = faceResponse.Value.Select(g => g.ToCoreGroup()).ToList();
+        //    }
+        //    else
+        //    {
+        //        response.Success = false;
+        //        response.Message = faceResponse.GetRawResponse().ReasonPhrase;
+        //    }
+
+        //    return response;
+        //}
+
+        public async Task<Core.Entities.Response> TrainGroupAsync(string groupId, CancellationToken token = default)
+        {
+            var response = new Core.Entities.Response();
+
+            try
+            {
+                var client = CreateLargePersonGroupClient(groupId);
+
+                var faceResponse = await client.TrainAsync(WaitUntil.Started);
+
+                if (faceResponse.GetRawResponse().IsError)
+                {
+                    response.Success = false;
+                    response.Message = faceResponse.GetRawResponse().ReasonPhrase;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error training group with ID {groupId}", groupId);
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+            return response;
         }
 
-        public async Task<Response<string>> GetTrainingStatusAsync(string groupId, CancellationToken token = default)
+        public async Task<Core.Entities.Response<string>> GetTrainingStatusAsync(string groupId, CancellationToken token = default)
         {
-            var response = new Response<string>();
+            var response = new Core.Entities.Response<string>();
 
-            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}/training";
-
-            var httpResponse = await SendRequestAsync<string>(HttpMethod.Get, serviceUrl, null, token);
-
-            if (httpResponse.Success && httpResponse.Data != null)
+            try
             {
-                using var document = JsonDocument.Parse(httpResponse.Data);
-                if (document.RootElement.TryGetProperty("status", out var status))
+                var client = CreateLargePersonGroupClient(groupId);
+
+                var faceResponse = await client.GetTrainingStatusAsync();
+
+                if (!faceResponse.GetRawResponse().IsError)
                 {
-                    response.Data = status.GetString();
+                    response.Data = faceResponse.Value.Status.ToString();
                 }
                 else
                 {
                     response.Success = false;
-                    response.Message = "Generic error during status retrieving";
+                    response.Message = faceResponse.GetRawResponse().ReasonPhrase;
                 }
             }
-            else
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Unexpected error getting training status for group with ID {groupId}", groupId);
                 response.Success = false;
-                response.Message = httpResponse.Message;
+                response.Message = ex.Message;
             }
-
             return response;
         }
         #endregion [ IGroupsManager interface ]
 
         #region [ IPersonsManager interface ]
-        public async Task<Response<string>> AddImageToPersonAsync(string groupId, string personId, Stream imageData, CancellationToken token = default)
+        public async Task<Core.Entities.Response<string>> AddImageToPersonAsync(string groupId, string personId, Stream imageData, CancellationToken token = default)
         {
-            var response = new Response<string>();
+            var response = new Core.Entities.Response<string>();
 
             if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage) ||
                 !ValidationUtility.ValidatePersonId(personId, out errorMessage))
@@ -204,38 +294,36 @@ namespace FACEIT.FaceService.Implementations
                 return response;
             }
 
-            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}/persons/{personId}/persistedfaces?detectionModel={_detectionModel}";
-
-            using var requestContent = new StreamContent(imageData);
-            requestContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-
-            var httpResponse = await SendRequestAsync<string>(HttpMethod.Post, serviceUrl, requestContent, token);
-
-            if (httpResponse.Success && httpResponse.Data != null)
+            try
             {
-                using var document = JsonDocument.Parse(httpResponse.Data);
-                if (document.RootElement.TryGetProperty("persistedFaceId", out var persistedFaceIdElement))
+                var client = CreateLargePersonGroupClient(groupId);
+
+                var binaryData = BinaryData.FromStream(imageData);
+
+                var faceResponse = await client.AddFaceAsync(new Guid(personId), binaryData, null, _detectionModel, null, token);
+
+                if (!faceResponse.GetRawResponse().IsError)
                 {
-                    response.Data = persistedFaceIdElement.GetString();
+                    response.Data = faceResponse.Value.PersistedFaceId.ToString();
                 }
                 else
                 {
                     response.Success = false;
-                    response.Message = "Generic error during image addition";
+                    response.Message = faceResponse.GetRawResponse().ReasonPhrase;
                 }
             }
-            else
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Unexpected error adding image to person ID {personId} on group {groupId}", personId, groupId);
                 response.Success = false;
-                response.Message = httpResponse.Message;
+                response.Message = ex.Message;
             }
-
             return response;
         }
 
-        public async Task<Response<Person>> CreatePersonAsync(string groupId, string personName, IDictionary<string, string>? properties = null, CancellationToken token = default)
+        public async Task<Core.Entities.Response<Core.Entities.Person>> CreatePersonAsync(string groupId, string personName, IDictionary<string, string>? properties = null, CancellationToken token = default)
         {
-            var response = new Response<Person>();
+            var response = new Core.Entities.Response<Core.Entities.Person>();
 
             if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage) ||
                 !ValidationUtility.ValidatePersonName(personName, out errorMessage))
@@ -244,80 +332,135 @@ namespace FACEIT.FaceService.Implementations
                 response.Message = errorMessage;
                 return response;
             }
+            var person = new Core.Entities.Person() { Name = personName, Properties = properties };
 
-            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}/persons";
-            var person = new Person() { Name = personName, Properties = properties };
-            var personJson = person.ToJson();
-            using var requestContent = new StringContent(personJson, Encoding.UTF8, "application/json");
-
-            var httpResponse = await SendRequestAsync<string>(HttpMethod.Post, serviceUrl, requestContent, token);
-
-            if (httpResponse.Success && httpResponse.Data != null)
+            try
             {
-                using var document = JsonDocument.Parse(httpResponse.Data);
-                if (document.RootElement.TryGetProperty("personId", out var personIdElement))
+                var client = CreateLargePersonGroupClient(groupId);
+                var faceResponse = await client.CreatePersonAsync(person.Name, person.PropertiesToJson(), token);
+
+                if (!faceResponse.GetRawResponse().IsError)
                 {
-                    person.Id = personIdElement.GetString();
+                    person.Id = faceResponse.Value.PersonId.ToString();
                     response.Data = person;
                 }
                 else
                 {
                     response.Success = false;
-                    response.Message = "Generic error during person creation";
+                    response.Message = faceResponse.GetRawResponse().ReasonPhrase;
                 }
             }
-            else
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Unexpected error creating person {personName} on group with ID {groupId}", personName, groupId);
                 response.Success = false;
-                response.Message = httpResponse.Message;
+                response.Message = ex.Message;
             }
-
             return response;
         }
 
-        public async Task<Response<Person>> GetPersonAsync(string groupId, string personId, CancellationToken token = default)
+        public async Task<Core.Entities.Response<Core.Entities.Person>> GetPersonAsync(string groupId, string personId, CancellationToken token = default)
         {
-            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}/persons/{personId}";
+            var response = new Core.Entities.Response<Core.Entities.Person>();
 
-            var httpResponse = await SendRequestAsync<FaceService.Entities.Person>(HttpMethod.Get, serviceUrl, null, token);
-            var response = new Response<Person>();
-
-            if (httpResponse.Success && httpResponse.Data != null)
-            {
-                response.Data = httpResponse.Data.ToCorePerson();
-            }
-            else
+            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage) ||
+                !ValidationUtility.ValidatePersonId(personId, out errorMessage))
             {
                 response.Success = false;
-                response.Message = httpResponse.Message;
+                response.Message = errorMessage;
+                return response;
             }
 
+            try
+            {
+                var client = CreateLargePersonGroupClient(groupId);
+                var faceResponse = await client.GetPersonAsync(new Guid(personId), token);
+
+                if (!faceResponse.GetRawResponse().IsError)
+                {
+                    response.Data = faceResponse.Value.ToCorePerson();
+                }
+                else
+                {
+                    response.Success = false;
+                    response.Message = faceResponse.GetRawResponse().ReasonPhrase;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error getting person with ID {personId} on group with ID {groupId}", personId, groupId);
+                response.Success = false;
+                response.Message = ex.Message;
+            }
             return response;
         }
 
-        public async Task<Response<IEnumerable<Person>>> GetPersonsByGroupAsync(string groupId, CancellationToken token = default)
+        public async Task<Core.Entities.Response<IEnumerable<Core.Entities.Person>>> GetPersonsByGroupAsync(string groupId, CancellationToken token = default)
         {
-            var serviceUrl = $"{_endpoint}/face/v1.0/persongroups/{groupId}/persons";
+            var response = new Core.Entities.Response<IEnumerable<Core.Entities.Person>>();
 
-            var httpResponse = await SendRequestAsync<IEnumerable<FaceService.Entities.Person>>(HttpMethod.Get, serviceUrl, null, token);
-            var response = new Response<IEnumerable<Person>>();
-
-            if (httpResponse.Success && httpResponse.Data != null)
-            {
-                response.Data = httpResponse.Data.Select(g => g.ToCorePerson()).ToList();
-            }
-            else
+            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage))
             {
                 response.Success = false;
-                response.Message = httpResponse.Message;
+                response.Message = errorMessage;
+                return response;
             }
 
+            try
+            {
+                var client = CreateLargePersonGroupClient(groupId);
+                var faceResponse = await client.GetPersonsAsync(cancellationToken: token);
+
+                if (!faceResponse.GetRawResponse().IsError)
+                {
+                    response.Data = faceResponse.Value.Select(g => g.ToCorePerson()).ToList();
+                }
+                else
+                {
+                    response.Success = false;
+                    response.Message = faceResponse.GetRawResponse().ReasonPhrase;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error getting persons for group with ID {groupId}", groupId);
+                response.Success = false;
+                response.Message = ex.Message;
+            }
             return response;
         }
 
-        public Task<Response> RemovePersonAsync(string groupId, string personId, CancellationToken token = default)
+        public async Task<Core.Entities.Response> RemovePersonAsync(string groupId, string personId, CancellationToken token = default)
         {
-            throw new NotImplementedException();
+            var response = new Core.Entities.Response();
+
+            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage) ||
+                !ValidationUtility.ValidatePersonId(personId, out errorMessage))
+            {
+                response.Success = false;
+                response.Message = errorMessage;
+                return response;
+            }
+
+            try
+            {
+                var client = CreateLargePersonGroupClient(groupId);
+                var faceResponse = await client.DeletePersonAsync(new Guid(personId));
+
+                if (faceResponse.IsError)
+                {
+                    response.Success = false;
+                    response.Message = faceResponse.ReasonPhrase;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error removing person with ID {personId} from group with ID {groupId}", personId,groupId);
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+
+            return response;
         }
         #endregion [ IPersonsManager interface ]
     }

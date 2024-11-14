@@ -10,8 +10,8 @@ namespace FACEIT.FaceService.Entities
 {
     internal class Group
     {
-        [JsonPropertyName("personGroupId")]
-        public string? PersonGroupId { get; set; }
+        [JsonPropertyName("largePersonGroupId")]
+        public string? LargePersonGroupId { get; set; }
 
         [JsonPropertyName("name")]
         public string? Name { get; set; }
@@ -29,7 +29,7 @@ namespace FACEIT.FaceService.Entities
 
             return new Core.Entities.Group()
             {
-                Id = PersonGroupId,
+                Id = LargePersonGroupId,
                 Name = Name,
                 Properties = properties
             };

@@ -13,12 +13,18 @@ namespace FACEIT.Core.Entities
     {
         public static string ToJson(this Group group, string recognitionModel)
         {
-            var propertiesJson = 
-                group.Properties != null ? 
-                JsonSerializer.Serialize(group.Properties) : "{}";
+            var propertiesJson = group.PropertiesToJson();
 
             var wrappedObject = new { name = group.Name, userData = propertiesJson, recognitionModel=recognitionModel };
             return JsonSerializer.Serialize(wrappedObject);
+        }
+
+        public static string PropertiesToJson(this Group group)
+        {
+            var propertiesJson =
+                    group.Properties != null ?
+                    JsonSerializer.Serialize(group.Properties) : "{}";
+            return propertiesJson;
         }
     }
 }

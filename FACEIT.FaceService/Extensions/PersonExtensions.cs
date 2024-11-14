@@ -12,11 +12,17 @@ namespace FACEIT.Core.Entities
     {
         public static string ToJson(this Person person)
         {
-            var propertiesJson =
-                person.Properties != null ? 
-                JsonSerializer.Serialize(person.Properties) : "{}";
-            var wrappedObject = new { name = person.Name, userData = propertiesJson };
+            var propertiesJson = person.PropertiesToJson();
+            var wrappedObject = new { name = person.Name, userData = propertiesJson};
             return JsonSerializer.Serialize(wrappedObject);
+        }
+
+        public static string PropertiesToJson(this Person person)
+        {
+            var propertiesJson =
+                    person.Properties != null ?
+                    JsonSerializer.Serialize(person.Properties) : "{}";
+            return propertiesJson;
         }
     }
 }
