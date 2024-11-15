@@ -261,7 +261,7 @@ namespace FACEIT.FaceService.Implementations
         public async Task<Core.Entities.Response<string>> GetTrainingStatusAsync(string groupId, CancellationToken token = default)
         {
             var response = new Core.Entities.Response<string>();
-            
+
             if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage))
             {
                 response.Success = false;
@@ -553,7 +553,7 @@ namespace FACEIT.FaceService.Implementations
             {
                 var client = CreateLargePersonGroupClient(groupId);
 
-               var faceResponse = await client.DeleteFaceAsync(new Guid(personId),new Guid(persistedImageId));
+                var faceResponse = await client.DeleteFaceAsync(new Guid(personId), new Guid(persistedImageId));
 
                 if (faceResponse.IsError)
                 {
@@ -563,16 +563,47 @@ namespace FACEIT.FaceService.Implementations
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error removing image {persistedImageId} to person ID {personId} on group {groupId}", persistedImageId,personId, groupId);
+                _logger.LogError(ex, "Unexpected error removing image {persistedImageId} to person ID {personId} on group {groupId}", persistedImageId, personId, groupId);
                 response.Success = false;
                 response.Message = ex.Message;
             }
             return response;
         }
 
-        public Task<Core.Entities.Response> UpdatePersonAsync(string groupId, string personId, string name, IDictionary<string, string>? properties = null, CancellationToken token = default)
+        public async Task<Core.Entities.Response> UpdatePersonAsync(string groupId, string personId, string name, IDictionary<string, string>? properties = null, CancellationToken token = default)
         {
-            throw new NotImplementedException();
+            var response = new Core.Entities.Response();
+
+            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage) ||
+                !ValidationUtility.ValidatePersonId(personId, out errorMessage) ||
+                !ValidationUtility.ValidatePersonName(name, out errorMessage))
+            {
+                response.Success = false;
+                response.Message = errorMessage;
+                return response;
+            }
+
+            try
+            {
+                var person = new Core.Entities.Person() { Id = groupId, Name = name, Properties = properties };
+
+                var client = CreateLargePersonGroupClient(groupId);
+                var requestContent = Azure.Core.RequestContent.Create(person.ToJson());
+                var faceResponse = await client.UpdatePersonAsync(new Guid(personId),requestContent);
+
+                if (faceResponse.IsError)
+                {
+                    response.Success = false;
+                    response.Message = faceResponse.ReasonPhrase;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error updating person {personId} in group ID {groupId}", personId,groupId);
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+            return response;
         }
 
         #endregion [ IPersonsManager interface ]
