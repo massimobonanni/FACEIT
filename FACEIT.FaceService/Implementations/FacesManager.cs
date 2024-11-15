@@ -281,9 +281,31 @@ namespace FACEIT.FaceService.Implementations
         }
 
 
-        public Task<Core.Entities.Response> UpdateGroupAsync(string groupId, string name, IDictionary<string, string>? properties = null, CancellationToken token = default)
+        public async Task<Core.Entities.Response> UpdateGroupAsync(string groupId, string name, IDictionary<string, string>? properties = null, CancellationToken token = default)
         {
-            throw new NotImplementedException();
+            var response = new Core.Entities.Response();
+
+            try
+            {
+                var group = new Group() { Id = groupId, Name = name, Properties = properties };
+
+                var client = CreateLargePersonGroupClient(groupId);
+                var requestContent = Azure.Core.RequestContent.Create(group.ToJson(_recognitionModel));
+                var faceResponse = await client.UpdateAsync(requestContent);
+
+                if (faceResponse.IsError)
+                {
+                    response.Success = false;
+                    response.Message = faceResponse.ReasonPhrase;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error updating group with ID {groupId}", groupId);
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+            return response;
         }
 
         public async Task<Core.Entities.Response> ClearAllAsync(CancellationToken token = default)
@@ -296,7 +318,7 @@ namespace FACEIT.FaceService.Implementations
             {
                 foreach (var group in groups.Data)
                 {
-                    var deleteGroup=await this.RemoveGroupAsync(group.Id, token);
+                    var deleteGroup = await this.RemoveGroupAsync(group.Id, token);
                     if (!deleteGroup.Success)
                     {
                         response.Success = false;
