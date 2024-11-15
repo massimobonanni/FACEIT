@@ -68,5 +68,23 @@ namespace FACEIT.FaceService.Utilities
             errorMessage = string.Empty;
             return true;
         }
+
+        internal static bool ValidateImageId(string imageId, out string errorMessage)
+        {
+            if (string.IsNullOrWhiteSpace(imageId))
+            {
+                errorMessage = "Image ID cannot be null or empty.";
+                return false;
+            }
+
+            if (!Guid.TryParse(imageId, out _))
+            {
+                errorMessage = "Image ID is not valid (must be a GUID).";
+                return false;
+            }
+
+            errorMessage = string.Empty;
+            return true;
+        }
     }
 }

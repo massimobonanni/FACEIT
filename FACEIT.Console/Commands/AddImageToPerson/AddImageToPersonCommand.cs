@@ -42,7 +42,7 @@ namespace FACEIT.Console.Commands.AddImageToPerson
             {
                 IsRequired = true,
             };
-            personIdOption.AddAlias("-pn");
+            personIdOption.AddAlias("-pi");
             AddOption(personIdOption);
 
             var imageFileOption = new Option<string>(

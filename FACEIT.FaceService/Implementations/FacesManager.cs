@@ -83,7 +83,7 @@ namespace FACEIT.FaceService.Implementations
             var response = new Core.Entities.Response<Group>();
 
             if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage) ||
-                            !ValidationUtility.ValidateGroupName(name, out errorMessage))
+                !ValidationUtility.ValidateGroupName(name, out errorMessage))
             {
                 response.Success = false;
                 response.Message = errorMessage;
@@ -230,6 +230,13 @@ namespace FACEIT.FaceService.Implementations
         {
             var response = new Core.Entities.Response();
 
+            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage))
+            {
+                response.Success = false;
+                response.Message = errorMessage;
+                return response;
+            }
+
             try
             {
                 var client = CreateLargePersonGroupClient(groupId);
@@ -254,6 +261,13 @@ namespace FACEIT.FaceService.Implementations
         public async Task<Core.Entities.Response<string>> GetTrainingStatusAsync(string groupId, CancellationToken token = default)
         {
             var response = new Core.Entities.Response<string>();
+            
+            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage))
+            {
+                response.Success = false;
+                response.Message = errorMessage;
+                return response;
+            }
 
             try
             {
@@ -284,6 +298,14 @@ namespace FACEIT.FaceService.Implementations
         public async Task<Core.Entities.Response> UpdateGroupAsync(string groupId, string name, IDictionary<string, string>? properties = null, CancellationToken token = default)
         {
             var response = new Core.Entities.Response();
+
+            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage) ||
+                !ValidationUtility.ValidateGroupName(name, out errorMessage))
+            {
+                response.Success = false;
+                response.Message = errorMessage;
+                return response;
+            }
 
             try
             {
@@ -514,9 +536,38 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
-        public Task<Core.Entities.Response<string>> RemoveImageFromPersonAsync(string groupId, string personId, string persistedImageId, CancellationToken token = default)
+        public async Task<Core.Entities.Response> RemoveImageFromPersonAsync(string groupId, string personId, string persistedImageId, CancellationToken token = default)
         {
-            throw new NotImplementedException();
+            var response = new Core.Entities.Response();
+
+            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage) ||
+                !ValidationUtility.ValidatePersonId(personId, out errorMessage) ||
+                !ValidationUtility.ValidateImageId(persistedImageId, out errorMessage))
+            {
+                response.Success = false;
+                response.Message = errorMessage;
+                return response;
+            }
+
+            try
+            {
+                var client = CreateLargePersonGroupClient(groupId);
+
+               var faceResponse = await client.DeleteFaceAsync(new Guid(personId),new Guid(persistedImageId));
+
+                if (faceResponse.IsError)
+                {
+                    response.Success = false;
+                    response.Message = faceResponse.ReasonPhrase;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error removing image {persistedImageId} to person ID {personId} on group {groupId}", persistedImageId,personId, groupId);
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+            return response;
         }
 
         public Task<Core.Entities.Response> UpdatePersonAsync(string groupId, string personId, string name, IDictionary<string, string>? properties = null, CancellationToken token = default)

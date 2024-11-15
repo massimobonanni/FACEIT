@@ -7,6 +7,7 @@ using FACEIT.Console.Commands.GetGroups;
 using FACEIT.Console.Commands.GetPersons;
 using FACEIT.Console.Commands.GetTrainingStatus;
 using FACEIT.Console.Commands.RemoveGroupCommand;
+using FACEIT.Console.Commands.RemoveImageFromPerson;
 using FACEIT.Console.Commands.TrainGroup;
 using FACEIT.Console.Commands.UpdateGroup;
 using FACEIT.Console.Utilities;
@@ -35,6 +36,7 @@ namespace FACEIT.Console
             rootCommand.AddCommand(new GetTrainingStatusCommand());
 
             rootCommand.AddCommand(new RemoveGroupCommand());
+            rootCommand.AddCommand(new RemoveImageFromPersonCommand());
 
             rootCommand.AddCommand(new TrainGroupCommand());
             
