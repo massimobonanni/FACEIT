@@ -45,6 +45,7 @@ namespace FACEIT.Client.Views
             }
 
             bkgWorker.RunWorkerAsync();
+            _messenger.Send(new CameraReadyMessage(true));
         }
 
         private void MainWindow_Closing(object sender, CancelEventArgs e)
