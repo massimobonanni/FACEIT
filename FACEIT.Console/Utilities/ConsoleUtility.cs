@@ -92,5 +92,12 @@ namespace FACEIT.Console.Utilities
             }
             WriteLine();
         }
+
+        public static void DisplayRecognizedPerson(RecognizedPerson recognizedPerson, Person person)
+        {
+            WriteLine($"Person ID: {person.Id}");
+            WriteLine($"\tName: {person.Name}");
+            WriteLine($"\tConfidence: {recognizedPerson.Confidence * 100}%");
+        }
     }
 }

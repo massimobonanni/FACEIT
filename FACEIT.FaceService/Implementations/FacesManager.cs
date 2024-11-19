@@ -8,13 +8,14 @@ using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Group = FACEIT.Core.Entities.Group;
 
 namespace FACEIT.FaceService.Implementations
 {
     ///  https://learn.microsoft.com/en-us/azure/ai-services/computer-vision/quickstarts-sdk/identity-client-library?tabs=windows%2Cvisual-studio&pivots=programming-language-rest-api
 
-    public class FacesManager : IGroupsManager, IPersonsManager
+    public class FacesManager : IGroupsManager, IPersonsManager, IFaceRecognizer
     {
         private readonly HttpClient _httpClient;
         private readonly string _endpoint;
@@ -34,6 +35,11 @@ namespace FACEIT.FaceService.Implementations
         private LargePersonGroupClient CreateLargePersonGroupClient(string groupId)
         {
             return new FaceAdministrationClient(new Uri(_endpoint), new AzureKeyCredential(_apiKey)).GetLargePersonGroupClient(groupId);
+        }
+
+        private FaceClient CreateFaceClient()
+        {
+            return new FaceClient(new Uri(_endpoint), new AzureKeyCredential(_apiKey));
         }
 
         private async Task<Core.Entities.Response<T>> SendRequestAsync<T>(HttpMethod method, string url, HttpContent? content = null, CancellationToken token = default)
@@ -589,7 +595,7 @@ namespace FACEIT.FaceService.Implementations
 
                 var client = CreateLargePersonGroupClient(groupId);
                 var requestContent = Azure.Core.RequestContent.Create(person.ToJson());
-                var faceResponse = await client.UpdatePersonAsync(new Guid(personId),requestContent);
+                var faceResponse = await client.UpdatePersonAsync(new Guid(personId), requestContent);
 
                 if (faceResponse.IsError)
                 {
@@ -599,7 +605,7 @@ namespace FACEIT.FaceService.Implementations
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error updating person {personId} in group ID {groupId}", personId,groupId);
+                _logger.LogError(ex, "Unexpected error updating person {personId} in group ID {groupId}", personId, groupId);
                 response.Success = false;
                 response.Message = ex.Message;
             }
@@ -607,5 +613,81 @@ namespace FACEIT.FaceService.Implementations
         }
 
         #endregion [ IPersonsManager interface ]
+
+        #region [ IFaceRecognizer interface ]
+        public async Task<Core.Entities.Response<IEnumerable<RecognizedPerson>>> RecognizeAsync(string groupId, string faceImageId, float confidenceThreshold, CancellationToken token = default)
+        {
+            var response = new Core.Entities.Response<IEnumerable<RecognizedPerson>>();
+
+            if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage) ||
+                !ValidationUtility.ValidateImageId(faceImageId, out errorMessage))
+            {
+                response.Success = false;
+                response.Message = errorMessage;
+                return response;
+            }
+
+            try
+            {
+                var client = CreateFaceClient();
+                var faceId = new Guid(faceImageId);
+                var faceResponse = await client.IdentifyFromLargePersonGroupAsync(new List<Guid>() { faceId }, groupId, 1, confidenceThreshold);
+
+                if (!faceResponse.GetRawResponse().IsError)
+                {
+
+                    var candidates = faceResponse.Value.Where(f => f.FaceId == faceId).SelectMany(f => f.Candidates);
+
+                    response.Data = candidates.Select(c => new RecognizedPerson()
+                    {
+                        Id = c.PersonId.ToString(),
+                        Confidence = c.Confidence
+                    });
+                }
+                else
+                {
+                    response.Success = false;
+                    response.Message = faceResponse.GetRawResponse().ReasonPhrase;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error recognizing face image {faceImageId} in group ID {groupId}", faceImageId, groupId);
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+            return response;
+        }
+
+        public async Task<Core.Entities.Response<string>> DetectAsync(Stream imageData, int timeToLive, CancellationToken token = default)
+        {
+            var response = new Core.Entities.Response<string>();
+
+            try
+            {
+                var client = CreateFaceClient();
+                var binaryData = BinaryData.FromStream(imageData);
+                var faceResponse = await client.DetectAsync(binaryData, _detectionModel, _recognitionModel, true, faceIdTimeToLive: timeToLive, cancellationToken: token);
+
+                if (!faceResponse.GetRawResponse().IsError)
+                {
+                    var detectedFace = faceResponse.Value.FirstOrDefault();
+                    response.Data = detectedFace?.FaceId.ToString();
+                }
+                else
+                {
+                    response.Success = false;
+                    response.Message = faceResponse.GetRawResponse().ReasonPhrase;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error detecting face");
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+            return response;
+        }
+        #endregion [ IFaceRecognizer interface ]
     }
 }
