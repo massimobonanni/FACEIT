@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using FACEIT.Client.Messages;
+using FACEIT.Client.Views;
 using FACEIT.Core.Entities;
 using FACEIT.Core.Interfaces;
 using System;
@@ -13,25 +14,22 @@ using System.Windows.Media.Imaging;
 
 namespace FACEIT.Client.ViewModels;
 
-public partial class MainWindowViewModel : ObservableRecipient
+internal partial class MainViewModel : BaseViewModel, IRecipient<FrameCapturedMessage>
 {
 
     private readonly IServiceProvider _serviceProvider;
     private readonly IMessenger _messenger;
     private readonly IGroupsManager _groupManager;
 
-    public MainWindowViewModel(IServiceProvider serviceProvider, IMessenger messenger, IGroupsManager groupManager)
+    public MainViewModel(IServiceProvider serviceProvider, IMessenger messenger, IGroupsManager groupManager)
     {
         _serviceProvider = serviceProvider;
         _messenger = messenger;
         _groupManager = groupManager;
 
-        _messenger.Register<FrameCapturedMessage>(this, (r, m) => this.CameraFrame = m.Value);
-        _messenger.Register<CameraReadyMessage>(this, async (r, m) =>
-        {
-            await LoadGroupsAsync();
-        });
+        //_messenger.Register(this);
 
+        IsActive = true;
     }
 
     internal async Task LoadGroupsAsync()
@@ -47,11 +45,16 @@ public partial class MainWindowViewModel : ObservableRecipient
         }
     }
 
-    [ObservableProperty]
-    private ObservableCollection<Group> groups = new ObservableCollection<Group>();
+    override protected async void OnActivated()
+    {
+        base.OnActivated();
+        IsBusy = true;
+        await LoadGroupsAsync();
+        IsBusy = false;
+    }
 
     [ObservableProperty]
-    private Group selectedGroup;
+    private ObservableCollection<Group> groups = new ObservableCollection<Group>();
 
     [ObservableProperty]
     private WriteableBitmap cameraFrame;
@@ -71,4 +74,16 @@ public partial class MainWindowViewModel : ObservableRecipient
         memStream.Position = 0;
         CapturedImage = currentFrame;
     }
+
+    [RelayCommand()]
+    private void OpenGroupsManagement()
+    {
+        _messenger.Send(new OpenNewWindowMessage(nameof(GroupsManagementWindow) ));
+    }
+
+    public void Receive(FrameCapturedMessage message)
+    {
+        this.CameraFrame = message.Value;
+    }
+
 }

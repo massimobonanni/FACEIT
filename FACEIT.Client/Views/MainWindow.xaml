@@ -5,64 +5,36 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FACEIT.Client.Views"
         mc:Ignorable="d"
-        Title="MainWindow" Height="1080" Width="1920" WindowState="Maximized">
+        Title="FACEIT Client" Height="800" Width="1280">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition />
-        </Grid.ColumnDefinitions>
-        <StackPanel Orientation="Vertical" Grid.Column="0" VerticalAlignment="Top">
-            <Image x:Name="FrameImage" Margin="10"  Source="{Binding CameraFrame}" Width="600" Height="400" HorizontalAlignment="Center"/>
-            <Button Command="{Binding CaptureImageCommand}" Margin="10">Capture Image</Button>
-        </StackPanel>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Menu Grid.Row="0">
+            <MenuItem Header="Groups Management" Command="{Binding OpenGroupsManagementCommand}" Margin="5,5,5,5">
+                <MenuItem.Icon>
+                    <Image Source="/Images/Group.png" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Persons Management" Command="{Binding OpenGroupsManagementCommand}" Margin="0,5,5,5">
+                <MenuItem.Icon>
+                    <Image Source="/Images/Person.png" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+        </Menu>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Vertical" Grid.Column="0" VerticalAlignment="Top">
+                <Image x:Name="FrameImage" Margin="10"  Source="{Binding CameraFrame}" Width="600" Height="400" HorizontalAlignment="Center"/>
+                <Button Command="{Binding CaptureImageCommand}" Margin="10">Capture Image</Button>
+            </StackPanel>
 
-        <TabControl Grid.Column="1">
-            <TabItem Header="Groups Management">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="2*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid Grid.Column="0" Margin="10" Name="GroupList">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <Label Grid.Row="0" Margin="5">Groups:</Label>
-                        <ListView Grid.Row="1" ItemsSource="{Binding Groups}" DisplayMemberPath="Name" Margin="5" SelectedItem="{Binding SelectedGroup}"></ListView>
-                    </Grid>
-                    <Grid Grid.Column="1" Margin="10" x:Name="GroupDetails">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <Label Grid.Row="0" Margin="5">Group Details:</Label>
-                        <Grid Grid.Row="1" Margin="10,5,10,5">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Label Grid.Column="0" Grid.Row="0">Group ID:</Label>
-                            <TextBox Grid.Column="1" Grid.Row="0" Text="{Binding SelectedGroup.Id}" IsEnabled="False" ></TextBox>
-                        </Grid>
-                    </Grid>
-                </Grid>
-            </TabItem>
-            <TabItem Header="Persons Management">
+            
 
-            </TabItem>
-            <TabItem Header="Persons Recognition">
-                <Image x:Name="CapturedImage" Margin="10" Grid.Row="0" Grid.Column="1" Source="{Binding CapturedImage}" />
-            </TabItem>
-        </TabControl>
-
-
+        </Grid>
     </Grid>
 </Window>

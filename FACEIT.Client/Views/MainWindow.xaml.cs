@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Threading;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
@@ -22,8 +23,10 @@ namespace FACEIT.Client.Views
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = Ioc.Default.GetRequiredService<MainWindowViewModel>();
+            DataContext = Ioc.Default.GetRequiredService<MainViewModel>();
             _messenger = Ioc.Default.GetRequiredService<IMessenger>();
+
+            _messenger.Register<OpenNewWindowMessage>(this,OpenNewWindowMessageReceived);
 
             capture = new VideoCapture();
             cascadeClassifier = new CascadeClassifier("haarcascade_frontalface_default.xml");
@@ -34,6 +37,19 @@ namespace FACEIT.Client.Views
             Loaded += MainWindow_Loaded;
             Closing += MainWindow_Closing;
         }
+
+        private void OpenNewWindowMessageReceived(object recipient, OpenNewWindowMessage message)
+        {
+            switch(message.Value)
+            {
+                case nameof(GroupsManagementWindow):
+                    var window = new GroupsManagementWindow();
+                    window.Show();
+                    break;
+            }
+        }
+
+        internal MainViewModel ViewModel => (MainViewModel)DataContext;
 
         private void MainWindow_Loaded(object sender, System.Windows.RoutedEventArgs e)
         {

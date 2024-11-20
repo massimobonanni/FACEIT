@@ -4,6 +4,6 @@
              xmlns:local="clr-namespace:FACEIT.Client"
              StartupUri="Views\MainWindow.xaml">
     <Application.Resources>
-         
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
     </Application.Resources>
 </Application>

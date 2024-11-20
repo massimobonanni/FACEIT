@@ -34,24 +34,12 @@ public partial class App : Application
         Ioc.Default.ConfigureServices(
             new ServiceCollection()
             .AddSingleton(config)
-            .AddSingleton<IPersonsManager>(sp =>
-            {
-                var httpClient= sp.GetRequiredService<HttpClient>();
-                var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-                var logger= loggerFactory.CreateLogger<FacesManager>();
-                var config = FacesManagerConfiguration.Load(sp.GetRequiredService<IConfiguration>());
-                return new FacesManager(httpClient,config.Endpoint, config.Key,logger);
-            })
-            .AddSingleton<IGroupsManager>(sp =>
-            {
-                var httpClient = sp.GetRequiredService<HttpClient>();
-                var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
-                var logger = loggerFactory.CreateLogger<FacesManager>();
-                var config = FacesManagerConfiguration.Load(sp.GetRequiredService<IConfiguration>());
-                return new FacesManager(httpClient, config.Endpoint, config.Key, logger);
-            })
+            .UsePersonsManager()
+            .UseGroupsManager()
+            .UseFaceRecognizer()
             .AddTransient<IMessenger>(sp => WeakReferenceMessenger.Default)
-            .AddTransient<MainWindowViewModel>()
+            .AddTransient<MainViewModel>()
+            .AddTransient<GroupsManagementViewModel>()
             .AddHttpClient()
             .AddLogging()
             .BuildServiceProvider()
