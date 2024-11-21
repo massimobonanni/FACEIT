@@ -17,7 +17,7 @@
                     <Image Source="/Images/Group.png" Width="16" Height="16"/>
                 </MenuItem.Icon>
             </MenuItem>
-            <MenuItem Header="Persons Management" Command="{Binding OpenGroupsManagementCommand}" Margin="0,5,5,5">
+            <MenuItem Header="Persons Management" Command="{Binding OpenPersonsManagementCommand}" Margin="0,5,5,5">
                 <MenuItem.Icon>
                     <Image Source="/Images/Person.png" Width="16" Height="16"/>
                 </MenuItem.Icon>

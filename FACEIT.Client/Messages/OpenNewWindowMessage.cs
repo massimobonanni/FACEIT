@@ -13,5 +13,7 @@ namespace FACEIT.Client.Messages
         {
 
         }
+
+        public object Data { get; set; }
     }
 }

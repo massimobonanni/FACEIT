@@ -40,6 +40,7 @@ public partial class App : Application
             .AddTransient<IMessenger>(sp => WeakReferenceMessenger.Default)
             .AddTransient<MainViewModel>()
             .AddTransient<GroupsManagementViewModel>()
+            .AddTransient<PersonsManagementViewModel>()
             .AddHttpClient()
             .AddLogging()
             .BuildServiceProvider()

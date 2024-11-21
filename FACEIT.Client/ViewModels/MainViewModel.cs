@@ -27,8 +27,6 @@ internal partial class MainViewModel : BaseViewModel, IRecipient<FrameCapturedMe
         _messenger = messenger;
         _groupManager = groupManager;
 
-        //_messenger.Register(this);
-
         IsActive = true;
     }
 
@@ -79,6 +77,12 @@ internal partial class MainViewModel : BaseViewModel, IRecipient<FrameCapturedMe
     private void OpenGroupsManagement()
     {
         _messenger.Send(new OpenNewWindowMessage(nameof(GroupsManagementWindow) ));
+    }
+
+    [RelayCommand()]
+    private void OpenPersonsManagement()
+    {
+        _messenger.Send(new OpenNewWindowMessage(nameof(PersonsManagementWindow)));
     }
 
     public void Receive(FrameCapturedMessage message)

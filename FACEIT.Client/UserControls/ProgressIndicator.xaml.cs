@@ -24,5 +24,10 @@ namespace FACEIT.Client.UserControls
         {
             InitializeComponent();
         }
+
+        protected override void OnRender(DrawingContext drawingContext)
+        {
+            base.OnRender(drawingContext);
+        }
     }
 }

@@ -43,8 +43,12 @@ namespace FACEIT.Client.Views
             switch(message.Value)
             {
                 case nameof(GroupsManagementWindow):
-                    var window = new GroupsManagementWindow();
-                    window.Show();
+                    var groupWindow = new GroupsManagementWindow();
+                    groupWindow.Show();
+                    break;
+                case nameof(PersonsManagementWindow):
+                    var personWindow = new PersonsManagementWindow();
+                    personWindow.Show();
                     break;
             }
         }

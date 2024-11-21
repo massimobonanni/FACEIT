@@ -45,10 +45,10 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <Label Grid.Column="0" Grid.Row="0">ID:</Label>
-                <TextBox Grid.Column="1" Grid.Row="0" Text="{Binding SelectedGroup.Id}" IsEnabled="False" ></TextBox>
-                <Label Grid.Column="0" Grid.Row="1">Name:</Label>
-                <TextBox Grid.Column="1" Grid.Row="1" Text="{Binding SelectedGroup.Name}" ></TextBox>
+                <Label Grid.Column="0" Grid.Row="0" Margin="0,5,0,5">ID:</Label>
+                <TextBox Grid.Column="1" Grid.Row="0" Text="{Binding SelectedGroup.Id}" IsEnabled="False" Margin="0,5,0,5"></TextBox>
+                <Label Grid.Column="0" Grid.Row="1" Margin="0,5,0,5">Name:</Label>
+                <TextBox Grid.Column="1" Grid.Row="1" Text="{Binding SelectedGroup.Name}" Margin="0,5,0,5"></TextBox>
 
                 <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Margin="5" Command="{Binding DeleteGroupCommand}">Delete</Button>
