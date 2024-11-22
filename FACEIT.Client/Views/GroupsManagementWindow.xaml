@@ -38,6 +38,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
@@ -50,7 +51,32 @@
                 <Label Grid.Column="0" Grid.Row="1" Margin="0,5,0,5">Name:</Label>
                 <TextBox Grid.Column="1" Grid.Row="1" Text="{Binding SelectedGroup.Name}" Margin="0,5,0,5"></TextBox>
 
-                <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Grid Grid.Row="2" Grid.ColumnSpan="2" Margin="20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left">Training Data</Label>
+                    <Button Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" Command="{Binding TrainGroupCommand}">Traing Group</Button>
+                    <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">Status :</Label>
+                    <Label Grid.Row="1" Grid.Column="1" Content="{Binding SelectedGroup.TrainingData.Status}"/>
+                    <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right">Created :</Label>
+                    <Label Grid.Row="2" Grid.Column="1" Content="{Binding SelectedGroup.TrainingData.CreatedDateTime}"/>
+                    <Label Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right">Last Action :</Label>
+                    <Label Grid.Row="3" Grid.Column="1" Content="{Binding SelectedGroup.TrainingData.LastActionDateTime}"/>
+                    <Label Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right">Last Succesful :</Label>
+                    <Label Grid.Row="4" Grid.Column="1" Content="{Binding SelectedGroup.TrainingData.LastSuccessfulTrainingDateTime}"/>
+                </Grid>
+                
+                <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Margin="5" Command="{Binding DeleteGroupCommand}">Delete</Button>
                     <Button Margin="50,5,5,5" Command="{Binding SaveGroupCommand}">Save</Button>
                 </StackPanel>

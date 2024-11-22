@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using FACEIT.Client.Entities;
 using FACEIT.Client.Messages;
 using FACEIT.Client.Views;
 using FACEIT.Core.Entities;
@@ -30,6 +31,7 @@ internal partial class GroupsManagementViewModel : BaseViewModel
         LoadGroupsCommand = new AsyncRelayCommand(LoadGroupsAsync);
         SaveGroupCommand = new AsyncRelayCommand(SaveGroupAsync);
         DeleteGroupCommand = new AsyncRelayCommand(DeleteGroupAsync);
+        TrainGroupCommand = new AsyncRelayCommand(TrainGroupAsync);
 
         ErrorMessage = string.Empty;
         IsErrorMessageVisible = false;
@@ -50,6 +52,7 @@ internal partial class GroupsManagementViewModel : BaseViewModel
     public IAsyncRelayCommand LoadGroupsCommand { get; }
     public IAsyncRelayCommand SaveGroupCommand { get; }
     public IAsyncRelayCommand DeleteGroupCommand { get; }
+    public IAsyncRelayCommand TrainGroupCommand { get; }
 
     private async Task LoadGroupsAsync()
     {
@@ -66,6 +69,11 @@ internal partial class GroupsManagementViewModel : BaseViewModel
                     Properties = group.Properties,
                     IsNew = false
                 };
+                var trainingDataResponse = await this._groupManager.GetTrainingStatusAsync(group.Id);
+                if (trainingDataResponse.Success)
+                {
+                    clientGroup.TrainingData = trainingDataResponse.Data;
+                }
                 Groups.Add(clientGroup);
             }
         }
@@ -83,11 +91,37 @@ internal partial class GroupsManagementViewModel : BaseViewModel
         SelectedGroup = group;
     }
 
+    private async Task TrainGroupAsync()
+    {
+        IsBusy = true;
+        if (IsGroupSelected)
+        {
+            var response = await this._groupManager.TrainGroupAsync(this.SelectedGroup.Id);
+            if (response.Success)
+            {
+                var trainResponse = await _groupManager.GetTrainingStatusAsync(SelectedGroup.Id);
+                if (trainResponse.Success)
+                {
+                    var currentGroup = this.SelectedGroup;
+                    currentGroup.TrainingData= trainResponse.Data;
+                    this.SelectedGroup = null;
+                    this.SelectedGroup = currentGroup;
+                }
+            }
+            else
+            {
+                ErrorMessage = response.Message;
+                IsErrorMessageVisible = true;
+            }
+        }
+        IsBusy = false;
+    }
+
     public async Task DeleteGroupAsync()
     {
         IsBusy = true;
         var response = await this._groupManager.RemoveGroupAsync(this.SelectedGroup.Id);
-        _messenger.Send(new GroupChangedMessage(this.SelectedGroup,GroupChangeType.Deleted));
+        _messenger.Send(new GroupChangedMessage(this.SelectedGroup, GroupChangeType.Deleted));
         await LoadGroupsAsync();
         IsBusy = false;
     }
@@ -116,5 +150,7 @@ internal partial class GroupsManagementViewModel : BaseViewModel
     private Client.Entities.Group selectedGroup;
 
     public bool IsGroupSelected { get => SelectedGroup != null; }
+
+
 
 }
