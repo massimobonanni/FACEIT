@@ -232,9 +232,9 @@ namespace FACEIT.FaceService.Implementations
         //    return response;
         //}
 
-        public async Task<Core.Entities.Response> TrainGroupAsync(string groupId, CancellationToken token = default)
+        public async Task<Core.Entities.Response<GroupTrainingData>> TrainGroupAsync(string groupId, CancellationToken token = default)
         {
-            var response = new Core.Entities.Response();
+            var response = new Core.Entities.Response<GroupTrainingData>();
 
             if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage))
             {
@@ -249,7 +249,16 @@ namespace FACEIT.FaceService.Implementations
 
                 var faceResponse = await client.TrainAsync(WaitUntil.Started);
 
-                if (faceResponse.GetRawResponse().IsError)
+                if (!faceResponse.GetRawResponse().IsError)
+                {
+                    response.Data = new GroupTrainingData()
+                    {
+                        GroupId = groupId,
+                        Status = "starting",
+                        LastActionDateTime = DateTimeOffset.Now
+                    };
+                }
+                else
                 {
                     response.Success = false;
                     response.Message = faceResponse.GetRawResponse().ReasonPhrase;
@@ -264,9 +273,9 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
-        public async Task<Core.Entities.Response<string>> GetTrainingStatusAsync(string groupId, CancellationToken token = default)
+        public async Task<Core.Entities.Response<GroupTrainingData>> GetTrainingStatusAsync(string groupId, CancellationToken token = default)
         {
-            var response = new Core.Entities.Response<string>();
+            var response = new Core.Entities.Response<GroupTrainingData>();
 
             if (!ValidationUtility.ValidateGroupId(groupId, out var errorMessage))
             {
@@ -283,7 +292,7 @@ namespace FACEIT.FaceService.Implementations
 
                 if (!faceResponse.GetRawResponse().IsError)
                 {
-                    response.Data = faceResponse.Value.Status.ToString();
+                    response.Data = faceResponse.Value.ToGroupTrainingData(groupId);
                 }
                 else
                 {

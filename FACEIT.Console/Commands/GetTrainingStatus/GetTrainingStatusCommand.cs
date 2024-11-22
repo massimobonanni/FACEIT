@@ -47,7 +47,7 @@ namespace FACEIT.Console.Commands.GetTrainingStatus
 
             if (response.Success)
             {
-                ConsoleUtility.WriteLine($"Training {response.Data} for group {groupId}");
+                ConsoleUtility.DisplayTrainingStatus(response.Data);
             }
             else
             {

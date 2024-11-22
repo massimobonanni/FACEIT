@@ -99,5 +99,15 @@ namespace FACEIT.Console.Utilities
             WriteLine($"\tName: {person.Name}");
             WriteLine($"\tConfidence: {recognizedPerson.Confidence * 100}%");
         }
+
+        public static void DisplayTrainingStatus(GroupTrainingData trainingData)
+        {
+            WriteLine($"Training data for group {trainingData.GroupId}");
+            WriteLine($"\tStatus: {trainingData.Status}");
+            WriteLine($"\tCreation datetime: {trainingData.LastActionDateTime}");
+            WriteLine($"\tLast action datetime: {trainingData.LastActionDateTime}");
+            WriteLine($"\tLast successful training datetime: {trainingData.LastSuccessfulTrainingDateTime}");
+            WriteLine($"\tMessage: {trainingData.ErrorMessage}");
+        }
     }
 }
