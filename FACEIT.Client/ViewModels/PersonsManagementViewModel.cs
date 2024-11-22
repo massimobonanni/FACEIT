@@ -44,12 +44,57 @@ internal partial class PersonsManagementViewModel : BaseViewModel, IRecipient<Fr
 
     private async Task DeletePersonAsync()
     {
-        throw new NotImplementedException();
+        IsBusy = true;
+        if (IsPersonSelected)
+        {
+            var deleteResponse = await this._personsManager.RemovePersonAsync(this.SelectedGroup.Id, this.SelectedPerson.Id);
+            if (deleteResponse.Success)
+            {
+                await LoadPersonsAsync();
+                SelectedPerson = null;
+            }
+            else
+            {
+                ErrorMessage = deleteResponse.Message;
+                IsErrorMessageVisible = true;
+            }
+        }
+        IsBusy = false;
     }
 
     private async Task SavePersonAsync()
     {
-        throw new NotImplementedException();
+        IsBusy = true;
+        if (IsPersonSelected)
+        {
+            Response response = null;
+            string personId = null;
+            if (SelectedPerson.IsNew)
+            {
+                response = await this._personsManager.CreatePersonAsync(this.SelectedGroup.Id, this.SelectedPerson.Name);
+                if (response.Success)
+                {
+                    personId = ((Response<Person>)response).Data.Id;
+                }
+            }
+            else
+            {
+                response = await this._personsManager.UpdatePersonAsync(this.SelectedGroup.Id, this.SelectedPerson.Id, this.SelectedPerson.Name);
+                personId = this.SelectedPerson.Id;
+            }
+
+            if (response.Success)
+            {
+                await LoadPersonsAsync();
+                SelectedPerson = Persons.FirstOrDefault(p => p.Id == personId);
+            }
+            else
+            {
+                ErrorMessage = response.Message;
+                IsErrorMessageVisible = true;
+            }
+        }
+        IsBusy = false;
     }
 
     public IAsyncRelayCommand LoadPersonsCommand { get; }
