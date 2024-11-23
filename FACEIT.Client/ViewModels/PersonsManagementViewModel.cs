@@ -71,7 +71,7 @@ internal partial class PersonsManagementViewModel : BaseViewModel, IRecipient<Fr
             string personId = null;
             if (SelectedPerson.IsNew)
             {
-                response = await this._personsManager.CreatePersonAsync(this.SelectedGroup.Id, this.SelectedPerson.Name);
+                response = await this._personsManager.CreatePersonAsync(this.SelectedGroup.Id, this.SelectedPerson.Name,this.SelectedPerson.Properties);
                 if (response.Success)
                 {
                     personId = ((Response<Person>)response).Data.Id;
@@ -79,7 +79,7 @@ internal partial class PersonsManagementViewModel : BaseViewModel, IRecipient<Fr
             }
             else
             {
-                response = await this._personsManager.UpdatePersonAsync(this.SelectedGroup.Id, this.SelectedPerson.Id, this.SelectedPerson.Name);
+                response = await this._personsManager.UpdatePersonAsync(this.SelectedGroup.Id, this.SelectedPerson.Id, this.SelectedPerson.Name, this.SelectedPerson.Properties);
                 personId = this.SelectedPerson.Id;
             }
 

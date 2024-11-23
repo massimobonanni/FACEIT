@@ -130,12 +130,12 @@ internal partial class GroupsManagementViewModel : BaseViewModel
         IsBusy = true;
         if (this.SelectedGroup.IsNew)
         {
-            var createresponse = await this._groupManager.CreateGroupAsync(this.SelectedGroup.Id, this.SelectedGroup.Name);
+            var createresponse = await this._groupManager.CreateGroupAsync(this.SelectedGroup.Id, this.SelectedGroup.Name,this.SelectedGroup.Properties);
             _messenger.Send(new GroupChangedMessage(this.SelectedGroup, GroupChangeType.Created));
         }
         else
         {
-            var udateResponse = await this._groupManager.UpdateGroupAsync(this.SelectedGroup.Id, this.SelectedGroup.Name);
+            var udateResponse = await this._groupManager.UpdateGroupAsync(this.SelectedGroup.Id, this.SelectedGroup.Name, this.SelectedGroup.Properties);
             _messenger.Send(new GroupChangedMessage(this.SelectedGroup, GroupChangeType.Updated));
         }
         await LoadGroupsAsync();

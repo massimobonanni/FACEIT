@@ -39,6 +39,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
@@ -50,8 +51,10 @@
                 <TextBox Grid.Column="1" Grid.Row="0" Text="{Binding SelectedGroup.Id}" IsEnabled="False" Margin="0,5,0,5"></TextBox>
                 <Label Grid.Column="0" Grid.Row="1" Margin="0,5,0,5">Name:</Label>
                 <TextBox Grid.Column="1" Grid.Row="1" Text="{Binding SelectedGroup.Name}" Margin="0,5,0,5"></TextBox>
+                <Label Grid.Column="0" Grid.Row="2" Margin="0,5,0,5">Description:</Label>
+                <TextBox Grid.Column="1" Grid.Row="2" Text="{Binding SelectedGroup.Description}" Margin="0,5,0,5"></TextBox>
 
-                <Grid Grid.Row="2" Grid.ColumnSpan="2" Margin="20">
+                <Grid Grid.Row="3" Grid.ColumnSpan="2" Margin="20">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
@@ -76,7 +79,7 @@
                     <Label Grid.Row="4" Grid.Column="1" Content="{Binding SelectedGroup.TrainingData.LastSuccessfulTrainingDateTime}"/>
                 </Grid>
                 
-                <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                <StackPanel Grid.Row="5" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Margin="5" Command="{Binding DeleteGroupCommand}">Delete</Button>
                     <Button Margin="50,5,5,5" Command="{Binding SaveGroupCommand}">Save</Button>
                 </StackPanel>

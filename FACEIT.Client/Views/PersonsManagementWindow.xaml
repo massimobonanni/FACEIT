@@ -46,6 +46,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
@@ -59,15 +60,17 @@
                 <TextBox Grid.Column="1" Grid.Row="1" Text="{Binding SelectedPerson.Id}" IsEnabled="False" Margin="0,5,0,5"></TextBox>
                 <Label Grid.Column="0" Grid.Row="2" Margin="0,5,0,5">Name:</Label>
                 <TextBox Grid.Column="1" Grid.Row="2" Text="{Binding SelectedPerson.Name}" Margin="0,5,0,5"></TextBox>
-                <Label Grid.Column="0" Grid.Row="3" Margin="0,5,0,5">Number of Images:</Label>
-                <Label Grid.Column="1" Grid.Row="3" Content="{Binding SelectedPerson.NumberOfImages}" Margin="0,5,0,5" IsEnabled="False" ></Label>
+                <Label Grid.Column="0" Grid.Row="3" Margin="0,5,0,5">Enabled:</Label>
+                <CheckBox Grid.Column="1" Grid.Row="3" IsChecked="{Binding SelectedPerson.Enabled}" Margin="0,5,0,5"></CheckBox>
+                <Label Grid.Column="0" Grid.Row="4" Margin="0,5,0,5">Number of Images:</Label>
+                <Label Grid.Column="1" Grid.Row="4" Content="{Binding SelectedPerson.NumberOfImages}" Margin="0,5,0,5" ></Label>
 
-                <StackPanel Orientation="Vertical" Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="2"  VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,5,0,5" Visibility="{Binding DisplayCameraCapture, Converter={StaticResource BooleanToVisibility}}">
+                <StackPanel Orientation="Vertical" Grid.Column="0" Grid.Row="5" Grid.ColumnSpan="2"  VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,5,0,5" Visibility="{Binding DisplayCameraCapture, Converter={StaticResource BooleanToVisibility}}">
                     <Image x:Name="FrameImage" Margin="10"  Source="{Binding CameraFrame}" Width="300" Height="200"/>
                     <Button Command="{Binding CaptureImageCommand}" Margin="10">Add Image</Button>
                 </StackPanel>
 
-                <StackPanel Grid.Row="5" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                <StackPanel Grid.Row="6" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Margin="5" Command="{Binding DeletePersonCommand}" Width="100">Delete</Button>
                     <Button Margin="50,5,5,5" Command="{Binding SavePersonCommand}" Width="100">Save</Button>
                 </StackPanel>
