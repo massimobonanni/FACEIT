@@ -9,6 +9,21 @@ namespace FACEIT.Client.Entities
 {
     internal class Person : Core.Entities.Person
     {
+        public Person()
+        {
+            
+        }
+
+        public Person(Core.Entities.Person source)
+        {
+            if (source!=null)
+            {
+                this.Id = source.Id;
+                this.Name = source.Name;
+                this.Properties = source.Properties;
+                this.PersistedFaceIds = source.PersistedFaceIds;
+            }
+        }
         public bool IsNew { get; set; } = false;
 
         public int NumberOfImages { get => this.PersistedFaceIds == null ? 0 : this.PersistedFaceIds.Count(); }

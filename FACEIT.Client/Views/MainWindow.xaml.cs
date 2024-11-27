@@ -26,8 +26,8 @@ namespace FACEIT.Client.Views
             DataContext = Ioc.Default.GetRequiredService<MainViewModel>();
             _messenger = Ioc.Default.GetRequiredService<IMessenger>();
 
-            _messenger.Register<OpenNewWindowMessage>(this,OpenNewWindowMessageReceived);
-
+            _messenger.Register<OpenNewWindowMessage>(this, OpenNewWindowMessageReceived);
+            _messenger.Register<PersonRecognizedMessage>(this, PersonRecognizedMessageReceived);
             capture = new VideoCapture();
             cascadeClassifier = new CascadeClassifier("haarcascade_frontalface_default.xml");
 
@@ -38,9 +38,28 @@ namespace FACEIT.Client.Views
             Closing += MainWindow_Closing;
         }
 
+        private void PersonRecognizedMessageReceived(object recipient, PersonRecognizedMessage message)
+        {
+            if (message.Value == null)
+            {
+                this.DetectedPersonPanel.Background = System.Windows.Media.Brushes.Red;
+            }
+            else
+            {
+                if (message.Value.Person.Enabled)
+                {
+                    this.DetectedPersonPanel.Background = System.Windows.Media.Brushes.LightGreen;
+                }
+                else
+                {
+                    this.DetectedPersonPanel.Background = System.Windows.Media.Brushes.Yellow;
+                }   
+            }
+        }
+
         private void OpenNewWindowMessageReceived(object recipient, OpenNewWindowMessage message)
         {
-            switch(message.Value)
+            switch (message.Value)
             {
                 case nameof(GroupsManagementWindow):
                     var groupWindow = new GroupsManagementWindow();
@@ -93,7 +112,7 @@ namespace FACEIT.Client.Views
                     // Must create and use WriteableBitmap in the same thread(UI Thread).
                     Dispatcher.Invoke(() =>
                     {
-                        var message= new FrameCapturedMessage(frameMat.ToWriteableBitmap());
+                        var message = new FrameCapturedMessage(frameMat.ToWriteableBitmap());
                         _messenger.Send(message);
                     });
                 }

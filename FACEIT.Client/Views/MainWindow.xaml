@@ -1,9 +1,10 @@
-﻿<Window x:Class="FACEIT.Client.Views.MainWindow"
+﻿<Window x:Name="window" x:Class="FACEIT.Client.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FACEIT.Client.Views"
+        xmlns:controls="clr-namespace:FACEIT.Client.UserControls"
         mc:Ignorable="d"
         Title="FACEIT Client" Height="800" Width="1280">
     <Grid>
@@ -30,11 +31,58 @@
             </Grid.ColumnDefinitions>
             <StackPanel Orientation="Vertical" Grid.Column="0" VerticalAlignment="Top">
                 <Image x:Name="FrameImage" Margin="10"  Source="{Binding CameraFrame}" Width="600" Height="400" HorizontalAlignment="Center"/>
-                <Button Command="{Binding CaptureImageCommand}" Margin="10">Capture Image</Button>
+                <Button Command="{Binding CaptureImageCommand}" Margin="10" HorizontalAlignment="Center" >
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <Image Width="32" Height="32" VerticalAlignment="Center" Source="/Images/DetectFace.png"/>
+                            <Label Content="Recognize" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
             </StackPanel>
-
-            
-
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="5">
+                    <Image Width="32" Height="32" Source="/Images/Group.png"/>
+                    <Label Margin="5">Group:</Label>
+                    <ComboBox ItemsSource="{Binding Groups}" SelectedValue="{Binding SelectedGroup}" DisplayMemberPath="Name" Margin="5" MinWidth="200"/>
+                </StackPanel>
+                <Label Grid.Row="1" Margin="10">Person detail:</Label>
+                <Image Grid.Row="2" Source="{Binding CapturedImage}" Width="150" Height="100"/>
+                <StackPanel Grid.Row="3" Margin="10" Name="DetectedPersonPanel" 
+                            Visibility="{Binding IsPersonRecognized, Converter={StaticResource BooleanToVisibility}}">
+                    <Grid Margin="30" Background="white">
+                        <Grid Grid.Row="1" Margin="10,5,10,5" 
+                             >
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Grid.Column="0" Grid.Row="0" Margin="0,5,0,5">ID:</Label>
+                            <Label Grid.Column="1" Grid.Row="0" Content="{Binding RecognizedPerson.Person.Id}" Margin="0,5,0,5"></Label>
+                            <Label Grid.Column="0" Grid.Row="1" Margin="0,5,0,5">Name:</Label>
+                            <Label Grid.Column="1" Grid.Row="1" Content="{Binding RecognizedPerson.Person.Name}" Margin="0,5,0,5"></Label>
+                            <Label Grid.Column="0" Grid.Row="2" Margin="0,5,0,5">Enabled:</Label>
+                            <CheckBox Grid.Column="1" Grid.Row="2" IsChecked="{Binding RecognizedPerson.Person.Enabled}" Margin="0,5,0,5" IsEnabled="False"></CheckBox>
+                        </Grid>
+                    </Grid>
+                </StackPanel>
+            </Grid>
         </Grid>
+        <controls:ErrorMessage Grid.RowSpan="2"  Width="400" Height="200" DataContext="{Binding DataContext, ElementName=window}"/>
+        <controls:ProgressIndicator x:Name="ProgressIndicator" Grid.RowSpan="2"  Width="150" Height="80" DataContext="{Binding DataContext, ElementName=window}" />
     </Grid>
 </Window>

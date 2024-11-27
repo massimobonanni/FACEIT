@@ -1,5 +1,7 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Azure;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using OpenCvSharp.Internal.Vectors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +27,20 @@ namespace FACEIT.Client.ViewModels
         {
             this.ErrorMessage = string.Empty;
             this.IsErrorMessageVisible = false;
+        }
+
+        protected void SetErrorMessage(Core.Entities.Response response)
+        {
+            if (response.Success)
+            {
+                this.ErrorMessage = null;
+                this.IsErrorMessageVisible = false;
+            }
+            else
+            {
+                this.ErrorMessage = response.Message;
+                this.IsErrorMessageVisible = true;
+            }
         }
     }
 }
