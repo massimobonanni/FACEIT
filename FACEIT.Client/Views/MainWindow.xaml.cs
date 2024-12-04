@@ -45,26 +45,22 @@ namespace FACEIT.Client.Views
 
         private void PersonRecognizedMessageReceived(object recipient, PersonRecognizedMessage message)
         {
-            Storyboard blinkAnimation = null;
 
             if (message.Value == null)
             {
-                blinkAnimation = (Storyboard)FindResource("PersonNotRecognizedAnimation");
+                 this.DetectedPersonPanel.Background = Brushes.Red;
             }
             else
             {
                 if (message.Value.Person.Enabled)
                 {
-                    blinkAnimation = (Storyboard)FindResource("PersonRecognizedEnabledAnimation");
+                    this.DetectedPersonPanel.Background = Brushes.Green;
                 }
                 else
                 {
-                    blinkAnimation = (Storyboard)FindResource("PersonRecognizedNotEnabledAnimation");
+                    this.DetectedPersonPanel.Background = Brushes.Yellow;
                 }
             }
-            Storyboard.SetTargetProperty(blinkAnimation, new PropertyPath(StackPanel.BackgroundProperty));
-            Storyboard.SetTarget(blinkAnimation, this.DetectedPersonPanel);
-            blinkAnimation.Begin();
         }
 
         private void OpenNewWindowMessageReceived(object recipient, OpenNewWindowMessage message)
