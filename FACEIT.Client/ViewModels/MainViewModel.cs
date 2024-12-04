@@ -14,7 +14,7 @@ using System.Windows.Media.Imaging;
 
 namespace FACEIT.Client.ViewModels;
 
-internal partial class MainViewModel : BaseViewModel, IRecipient<FrameCapturedMessage>
+internal partial class MainViewModel : BaseViewModel, IRecipient<FrameCapturedMessage>, IRecipient<GroupChangedMessage>
 {
 
     private readonly IServiceProvider _serviceProvider;
@@ -96,10 +96,13 @@ internal partial class MainViewModel : BaseViewModel, IRecipient<FrameCapturedMe
     public bool IsPersonRecognized { get => RecognizedPerson != null; }
     public bool IsNotPersonRecognized { get => RecognizedPerson == null; }
 
+    [ObservableProperty]
+    private bool showRecognizedPersonPanel;
+
     private async Task CaptureImageAsync()
     {
         IsBusy = true;
-
+        this.ShowRecognizedPersonPanel = false;
         var currentFrame = BitmapFrame.Create(CameraFrame);
         using var memStream = new MemoryStream();
         BitmapEncoder encoder = new PngBitmapEncoder();
@@ -115,11 +118,11 @@ internal partial class MainViewModel : BaseViewModel, IRecipient<FrameCapturedMe
             var faceResponse = await this._faceRecognizer.RecognizeAsync(this.SelectedGroup.Id, tempFaceResponse.Data, 0.80f);
             if (faceResponse.Success)
             {
-                PersonRecognizedMessage recognizedPersonMessage = null;
                 if (faceResponse.Data == null || !faceResponse.Data.Any())
                 {
+                    this.ShowRecognizedPersonPanel = true;
                     this.RecognizedPerson = null;
-                    recognizedPersonMessage = new PersonRecognizedMessage(null);
+                    _messenger.Send(new PersonRecognizedMessage(this.RecognizedPerson));
                 }
                 else
                 {
@@ -133,14 +136,14 @@ internal partial class MainViewModel : BaseViewModel, IRecipient<FrameCapturedMe
                             Person = new Entities.Person(personResponse.Data),
                             Confidence = personRecognized.Confidence
                         };
-                        recognizedPersonMessage = new PersonRecognizedMessage(this.RecognizedPerson);
+                        this.ShowRecognizedPersonPanel = true;
+                        _messenger.Send(new PersonRecognizedMessage(this.RecognizedPerson));
                     }
                     else
                     {
                         SetErrorMessage(personResponse);
                     }
                 }
-                _messenger.Send(recognizedPersonMessage);
             }
             else
             {
@@ -177,4 +180,10 @@ internal partial class MainViewModel : BaseViewModel, IRecipient<FrameCapturedMe
         this.CameraFrame = message.Value;
     }
 
+    public async void Receive(GroupChangedMessage message)
+    {
+        var selectedGroup = this.SelectedGroup;
+        await LoadGroupsAsync();
+        this.SelectedGroup = Groups.FirstOrDefault(g => g.Id == selectedGroup.Id);
+    }
 }
