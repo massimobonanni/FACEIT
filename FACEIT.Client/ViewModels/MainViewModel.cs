@@ -119,6 +119,7 @@ internal partial class MainViewModel : BaseViewModel, IRecipient<FrameCapturedMe
                 if (faceResponse.Data == null || !faceResponse.Data.Any())
                 {
                     this.RecognizedPerson = null;
+                    recognizedPersonMessage = new PersonRecognizedMessage(null);
                 }
                 else
                 {

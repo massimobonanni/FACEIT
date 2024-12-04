@@ -1,6 +1,11 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Threading;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Markup.Localizer;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
 using FACEIT.Client.Messages;
@@ -40,21 +45,26 @@ namespace FACEIT.Client.Views
 
         private void PersonRecognizedMessageReceived(object recipient, PersonRecognizedMessage message)
         {
+            Storyboard blinkAnimation = null;
+
             if (message.Value == null)
             {
-                this.DetectedPersonPanel.Background = System.Windows.Media.Brushes.Red;
+                blinkAnimation = (Storyboard)FindResource("PersonNotRecognizedAnimation");
             }
             else
             {
                 if (message.Value.Person.Enabled)
                 {
-                    this.DetectedPersonPanel.Background = System.Windows.Media.Brushes.LightGreen;
+                    blinkAnimation = (Storyboard)FindResource("PersonRecognizedEnabledAnimation");
                 }
                 else
                 {
-                    this.DetectedPersonPanel.Background = System.Windows.Media.Brushes.Yellow;
-                }   
+                    blinkAnimation = (Storyboard)FindResource("PersonRecognizedNotEnabledAnimation");
+                }
             }
+            Storyboard.SetTargetProperty(blinkAnimation, new PropertyPath(StackPanel.BackgroundProperty));
+            Storyboard.SetTarget(blinkAnimation, this.DetectedPersonPanel);
+            blinkAnimation.Begin();
         }
 
         private void OpenNewWindowMessageReceived(object recipient, OpenNewWindowMessage message)

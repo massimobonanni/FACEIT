@@ -7,6 +7,23 @@
         xmlns:controls="clr-namespace:FACEIT.Client.UserControls"
         mc:Ignorable="d"
         Title="FACEIT Client" Height="800" Width="1280">
+    <Window.Resources>
+        <Storyboard x:Key="PersonRecognizedEnabledAnimation">
+            <ColorAnimation Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)" 
+                From="White" To="Green" Duration="0:0:1" 
+                AutoReverse="True" RepeatBehavior="Forever" />
+        </Storyboard>
+        <Storyboard x:Key="PersonRecognizedNotEnabledAnimation">
+            <ColorAnimation Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)" 
+                From="White" To="Yellow" Duration="0:0:1" 
+                AutoReverse="True" RepeatBehavior="Forever" />
+        </Storyboard>
+        <Storyboard x:Key="PersonNotRecognizedAnimation">
+            <ColorAnimation Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)" 
+                From="White" To="Red" Duration="0:0:1" 
+                AutoReverse="True" RepeatBehavior="Forever" />
+        </Storyboard>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -45,7 +62,6 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
@@ -54,14 +70,14 @@
                     <Label Margin="5">Group:</Label>
                     <ComboBox ItemsSource="{Binding Groups}" SelectedValue="{Binding SelectedGroup}" DisplayMemberPath="Name" Margin="5" MinWidth="200"/>
                 </StackPanel>
-                <Label Grid.Row="1" Margin="10">Person detail:</Label>
-                <Image Grid.Row="2" Source="{Binding CapturedImage}" Width="150" Height="100"/>
-                <StackPanel Grid.Row="3" Margin="10" Name="DetectedPersonPanel" 
+                <Image Grid.Row="1" Source="{Binding CapturedImage}" Width="150" Height="100" Margin="10"/>
+                <StackPanel Grid.Row="2" Margin="10" Name="DetectedPersonPanel" 
                             Visibility="{Binding IsPersonRecognized, Converter={StaticResource BooleanToVisibility}}">
                     <Grid Margin="30" Background="white">
                         <Grid Grid.Row="1" Margin="10,5,10,5" 
                              >
                             <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
@@ -71,12 +87,14 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Label Grid.Column="0" Grid.Row="0" Margin="0,5,0,5">ID:</Label>
-                            <Label Grid.Column="1" Grid.Row="0" Content="{Binding RecognizedPerson.Person.Id}" Margin="0,5,0,5"></Label>
-                            <Label Grid.Column="0" Grid.Row="1" Margin="0,5,0,5">Name:</Label>
-                            <Label Grid.Column="1" Grid.Row="1" Content="{Binding RecognizedPerson.Person.Name}" Margin="0,5,0,5"></Label>
-                            <Label Grid.Column="0" Grid.Row="2" Margin="0,5,0,5">Enabled:</Label>
-                            <CheckBox Grid.Column="1" Grid.Row="2" IsChecked="{Binding RecognizedPerson.Person.Enabled}" Margin="0,5,0,5" IsEnabled="False"></CheckBox>
+                            <Label Grid.Row="0" Grid.ColumnSpan="2">Person detail:</Label>
+
+                            <Label Grid.Column="0" Grid.Row="1" Margin="0,5,0,5">ID:</Label>
+                            <Label Grid.Column="1" Grid.Row="1" Content="{Binding RecognizedPerson.Person.Id}" Margin="0,5,0,5"></Label>
+                            <Label Grid.Column="0" Grid.Row="2" Margin="0,5,0,5">Name:</Label>
+                            <Label Grid.Column="1" Grid.Row="2" Content="{Binding RecognizedPerson.Person.Name}" Margin="0,5,0,5"></Label>
+                            <Label Grid.Column="0" Grid.Row="3" Margin="0,5,0,5">Enabled:</Label>
+                            <CheckBox Grid.Column="1" Grid.Row="3" IsChecked="{Binding RecognizedPerson.Person.Enabled}" Margin="0,5,0,5" IsEnabled="False"></CheckBox>
                         </Grid>
                     </Grid>
                 </StackPanel>
