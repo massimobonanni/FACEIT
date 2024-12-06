@@ -25,9 +25,10 @@ public partial class App : Application
         base.OnStartup(e);
 
         var configBuilder = new ConfigurationBuilder()
-                  .SetBasePath(Directory.GetCurrentDirectory())
-                  .AddJsonFile("appsettings.local.json", optional: true)
-                  .AddJsonFile("appsettings.json", optional: false);
+            .AddUserSecrets<App>()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.local.json", optional: true)
+            .AddJsonFile("appsettings.json", optional: false);
 
         IConfiguration config = configBuilder.Build();
 
