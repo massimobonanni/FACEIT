@@ -184,6 +184,7 @@ internal partial class MainViewModel : BaseViewModel, IRecipient<FrameCapturedMe
     {
         var selectedGroup = this.SelectedGroup;
         await LoadGroupsAsync();
-        this.SelectedGroup = Groups.FirstOrDefault(g => g.Id == selectedGroup.Id);
+        if (selectedGroup != null)
+            this.SelectedGroup = Groups.FirstOrDefault(g => g.Id == selectedGroup.Id);
     }
 }
