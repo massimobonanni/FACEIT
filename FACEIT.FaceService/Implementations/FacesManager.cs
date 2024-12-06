@@ -32,16 +32,34 @@ namespace FACEIT.FaceService.Implementations
             _logger = logger;
         }
 
+        /// <summary>
+        /// Creates a LargePersonGroupClient for the specified group ID.
+        /// </summary>
+        /// <param name="groupId">The ID of the group.</param>
+        /// <returns>A LargePersonGroupClient instance.</returns>
         private LargePersonGroupClient CreateLargePersonGroupClient(string groupId)
         {
             return new FaceAdministrationClient(new Uri(_endpoint), new AzureKeyCredential(_apiKey)).GetLargePersonGroupClient(groupId);
         }
 
+        /// <summary>
+        /// Creates a FaceClient instance using the configured endpoint and API key.
+        /// </summary>
+        /// <returns>A new instance of FaceClient.</returns>
         private FaceClient CreateFaceClient()
         {
             return new FaceClient(new Uri(_endpoint), new AzureKeyCredential(_apiKey));
         }
 
+        /// <summary>
+        /// Sends an HTTP request asynchronously and returns a response of the specified type.
+        /// </summary>
+        /// <typeparam name="T">The type of the response data.</typeparam>
+        /// <param name="method">The HTTP method to use for the request.</param>
+        /// <param name="url">The URL to send the request to.</param>
+        /// <param name="content">The HTTP content to send with the request, if any.</param>
+        /// <param name="token">A cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the response with the data of the specified type.</returns>
         private async Task<Core.Entities.Response<T>> SendRequestAsync<T>(HttpMethod method, string url, HttpContent? content = null, CancellationToken token = default)
         {
             var response = new Core.Entities.Response<T>();
@@ -84,6 +102,14 @@ namespace FACEIT.FaceService.Implementations
         }
 
         #region [ IGroupsManager interface ]
+        /// <summary>
+        /// Creates a new group asynchronously.
+        /// </summary>
+        /// <param name="groupId">The ID of the group.</param>
+        /// <param name="name">The name of the group.</param>
+        /// <param name="properties">Optional properties of the group.</param>
+        /// <param name="token">Cancellation token.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the response with the created group.</returns>
         public async Task<Core.Entities.Response<Group>> CreateGroupAsync(string groupId, string name, IDictionary<string, string>? properties = null, CancellationToken token = default)
         {
             var response = new Core.Entities.Response<Group>();
@@ -122,6 +148,12 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
+        /// <summary>
+        /// Removes a group by its ID asynchronously.
+        /// </summary>
+        /// <param name="groupId">The ID of the group to be removed.</param>
+        /// <param name="token">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the response.</returns>
         public async Task<Core.Entities.Response> RemoveGroupAsync(string groupId, CancellationToken token = default)
         {
             var response = new Core.Entities.Response();
@@ -155,6 +187,12 @@ namespace FACEIT.FaceService.Implementations
         }
 
 
+        /// <summary>
+        /// Gets a group by its ID asynchronously.
+        /// </summary>
+        /// <param name="groupId">The ID of the group.</param>
+        /// <param name="token">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the response with the group.</returns>
         public async Task<Core.Entities.Response<Group>> GetGroupAsync(string groupId, CancellationToken token = default)
         {
             var response = new Core.Entities.Response<Group>();
@@ -191,6 +229,11 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
+        /// <summary>
+        /// Gets all groups asynchronously.
+        /// </summary>
+        /// <param name="token">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the response with the list of groups.</returns>
         public async Task<Core.Entities.Response<IEnumerable<Group>>> GetGroupsAsync(CancellationToken token = default)
         {
             var serviceUrl = $"{_endpoint}/face/v1.0/largepersongroups";
@@ -211,27 +254,12 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
-        //public async Task<Core.Entities.Response<IEnumerable<Group>>> GetGroupsAsync(CancellationToken token = default)
-        //{
-        //    var response = new Core.Entities.Response<IEnumerable<Group>>();
-
-        //    var client = CreateLargePersonGroupClient(null);
-
-        //    var faceResponse = await client.GetLargePersonGroupsAsync(cancellationToken: token);
-
-        //    if (!faceResponse.GetRawResponse().IsError)
-        //    {
-        //        response.Data = faceResponse.Value.Select(g => g.ToCoreGroup()).ToList();
-        //    }
-        //    else
-        //    {
-        //        response.Success = false;
-        //        response.Message = faceResponse.GetRawResponse().ReasonPhrase;
-        //    }
-
-        //    return response;
-        //}
-
+        /// <summary>
+        /// Trains a group by its ID asynchronously.
+        /// </summary>
+        /// <param name="groupId">The ID of the group to be trained.</param>
+        /// <param name="token">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the response with the group training data.</returns>
         public async Task<Core.Entities.Response<GroupTrainingData>> TrainGroupAsync(string groupId, CancellationToken token = default)
         {
             var response = new Core.Entities.Response<GroupTrainingData>();
@@ -273,6 +301,12 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
+        /// <summary>
+        /// Gets the training status of a group by its ID asynchronously.
+        /// </summary>
+        /// <param name="groupId">The ID of the group.</param>
+        /// <param name="token">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the response with the group training data.</returns>
         public async Task<Core.Entities.Response<GroupTrainingData>> GetTrainingStatusAsync(string groupId, CancellationToken token = default)
         {
             var response = new Core.Entities.Response<GroupTrainingData>();
@@ -310,6 +344,14 @@ namespace FACEIT.FaceService.Implementations
         }
 
 
+        /// <summary>
+        /// Updates a group by its ID asynchronously.
+        /// </summary>
+        /// <param name="groupId">The ID of the group.</param>
+        /// <param name="name">The new name of the group.</param>
+        /// <param name="properties">Optional new properties of the group.</param>
+        /// <param name="token">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the response.</returns>
         public async Task<Core.Entities.Response> UpdateGroupAsync(string groupId, string name, IDictionary<string, string>? properties = null, CancellationToken token = default)
         {
             var response = new Core.Entities.Response();
@@ -345,6 +387,11 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
+        /// <summary>
+        /// Clears all groups asynchronously.
+        /// </summary>
+        /// <param name="token">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the response.</returns>
         public async Task<Core.Entities.Response> ClearAllAsync(CancellationToken token = default)
         {
             var response = new Core.Entities.Response();
@@ -370,6 +417,14 @@ namespace FACEIT.FaceService.Implementations
         #endregion [ IGroupsManager interface ]
 
         #region [ IPersonsManager interface ]
+        /// <summary>
+        /// Adds an image to a person asynchronously.
+        /// </summary>
+        /// <param name="groupId">The ID of the group.</param>
+        /// <param name="personId">The ID of the person.</param>
+        /// <param name="imageData">The image data stream.</param>
+        /// <param name="token">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the response with the image ID.</returns>
         public async Task<Core.Entities.Response<string>> AddImageToPersonAsync(string groupId, string personId, Stream imageData, CancellationToken token = default)
         {
             var response = new Core.Entities.Response<string>();
@@ -409,6 +464,14 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
+        /// <summary>
+        /// Creates a new person in the specified group asynchronously.
+        /// </summary>
+        /// <param name="groupId">The ID of the group.</param>
+        /// <param name="personName">The name of the person.</param>
+        /// <param name="properties">Optional properties of the person.</param>
+        /// <param name="token">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the response with the created person.</returns>
         public async Task<Core.Entities.Response<Core.Entities.Person>> CreatePersonAsync(string groupId, string personName, IDictionary<string, string>? properties = null, CancellationToken token = default)
         {
             var response = new Core.Entities.Response<Core.Entities.Person>();
@@ -447,6 +510,13 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
+        /// <summary>
+        /// Gets the specified person from the group asynchronously.
+        /// </summary>
+        /// <param name="groupId">The ID of the group.</param>
+        /// <param name="personId">The ID of the person.</param>
+        /// <param name="token">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the response with the person.</returns>
         public async Task<Core.Entities.Response<Core.Entities.Person>> GetPersonAsync(string groupId, string personId, CancellationToken token = default)
         {
             var response = new Core.Entities.Response<Core.Entities.Person>();
@@ -483,6 +553,12 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
+        /// <summary>
+        /// Gets all persons in the specified group asynchronously.
+        /// </summary>
+        /// <param name="groupId">The ID of the group.</param>
+        /// <param name="token">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the response with the list of persons.</returns>
         public async Task<Core.Entities.Response<IEnumerable<Core.Entities.Person>>> GetPersonsByGroupAsync(string groupId, CancellationToken token = default)
         {
             var response = new Core.Entities.Response<IEnumerable<Core.Entities.Person>>();
@@ -518,6 +594,13 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
+        /// <summary>
+        /// Removes the specified person from the group asynchronously.
+        /// </summary>
+        /// <param name="groupId">The ID of the group.</param>
+        /// <param name="personId">The ID of the person.</param>
+        /// <param name="token">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the response.</returns>
         public async Task<Core.Entities.Response> RemovePersonAsync(string groupId, string personId, CancellationToken token = default)
         {
             var response = new Core.Entities.Response();
@@ -551,6 +634,14 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
+        /// <summary>
+        /// Removes the specified image from the person asynchronously.
+        /// </summary>
+        /// <param name="groupId">The ID of the group.</param>
+        /// <param name="personId">The ID of the person.</param>
+        /// <param name="persistedImageId">The ID of the image to be removed.</param>
+        /// <param name="token">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the response.</returns>
         public async Task<Core.Entities.Response> RemoveImageFromPersonAsync(string groupId, string personId, string persistedImageId, CancellationToken token = default)
         {
             var response = new Core.Entities.Response();
@@ -585,6 +676,15 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
+        /// <summary>
+        /// Updates the specified person in the group asynchronously.
+        /// </summary>
+        /// <param name="groupId">The ID of the group.</param>
+        /// <param name="personId">The ID of the person.</param>
+        /// <param name="name">The new name of the person.</param>
+        /// <param name="properties">Optional properties of the person.</param>
+        /// <param name="token">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the response.</returns>
         public async Task<Core.Entities.Response> UpdatePersonAsync(string groupId, string personId, string name, IDictionary<string, string>? properties = null, CancellationToken token = default)
         {
             var response = new Core.Entities.Response();
@@ -620,10 +720,19 @@ namespace FACEIT.FaceService.Implementations
             }
             return response;
         }
-
         #endregion [ IPersonsManager interface ]
 
         #region [ IFaceRecognizer interface ]
+        /// <summary>
+        /// Recognizes faces in a given image within a specified group.
+        /// </summary>
+        /// <param name="groupId">The ID of the group to search within.</param>
+        /// <param name="faceImageId">The ID of the face image to recognize.</param>
+        /// <param name="confidenceThreshold">The confidence threshold for recognition.</param>
+        /// <param name="token">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a response with a collection of recognized persons.</returns>
+        /// <exception cref="ArgumentException">Thrown when the groupId or faceImageId is invalid.</exception>
+        /// <exception cref="Exception">Thrown when an unexpected error occurs during face recognition.</exception>
         public async Task<Core.Entities.Response<IEnumerable<RecognizedPerson>>> RecognizeAsync(string groupId, string faceImageId, float confidenceThreshold, CancellationToken token = default)
         {
             var response = new Core.Entities.Response<IEnumerable<RecognizedPerson>>();
@@ -668,6 +777,14 @@ namespace FACEIT.FaceService.Implementations
             return response;
         }
 
+        /// <summary>
+        /// Detects faces in the provided image data.
+        /// </summary>
+        /// <param name="imageData">The stream containing the image data.</param>
+        /// <param name="timeToLive">The time to live for the detection result.</param>
+        /// <param name="token">Cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a response with the detection result as a string.</returns>
+        /// <exception cref="Exception">Thrown when an unexpected error occurs during face detection.</exception>
         public async Task<Core.Entities.Response<string>> DetectAsync(Stream imageData, int timeToLive, CancellationToken token = default)
         {
             var response = new Core.Entities.Response<string>();

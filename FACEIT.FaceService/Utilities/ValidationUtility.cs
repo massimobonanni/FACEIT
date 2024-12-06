@@ -6,9 +6,17 @@ using System.Threading.Tasks;
 
 namespace FACEIT.FaceService.Utilities
 {
+    /// <summary>
+    /// Provides utility methods for validating various identifiers and names.
+    /// </summary>
     internal static class ValidationUtility
     {
-
+        /// <summary>
+        /// Validates the specified group ID.
+        /// </summary>
+        /// <param name="groupId">The group ID to validate.</param>
+        /// <param name="errorMessage">The error message if validation fails.</param>
+        /// <returns><c>true</c> if the group ID is valid; otherwise, <c>false</c>.</returns>
         internal static bool ValidateGroupId(string groupId, out string errorMessage)
         {
             if (string.IsNullOrWhiteSpace(groupId))
@@ -27,6 +35,12 @@ namespace FACEIT.FaceService.Utilities
             return true;
         }
 
+        /// <summary>
+        /// Validates the specified group name.
+        /// </summary>
+        /// <param name="name">The group name to validate.</param>
+        /// <param name="errorMessage">The error message if validation fails.</param>
+        /// <returns><c>true</c> if the group name is valid; otherwise, <c>false</c>.</returns>
         internal static bool ValidateGroupName(string name, out string errorMessage)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -39,6 +53,12 @@ namespace FACEIT.FaceService.Utilities
             return true;
         }
 
+        /// <summary>
+        /// Validates the specified person ID.
+        /// </summary>
+        /// <param name="personId">The person ID to validate.</param>
+        /// <param name="errorMessage">The error message if validation fails.</param>
+        /// <returns><c>true</c> if the person ID is valid; otherwise, <c>false</c>.</returns>
         internal static bool ValidatePersonId(string personId, out string errorMessage)
         {
             if (string.IsNullOrWhiteSpace(personId))
@@ -57,6 +77,12 @@ namespace FACEIT.FaceService.Utilities
             return true;
         }
 
+        /// <summary>
+        /// Validates the specified person name.
+        /// </summary>
+        /// <param name="name">The person name to validate.</param>
+        /// <param name="errorMessage">The error message if validation fails.</param>
+        /// <returns><c>true</c> if the person name is valid; otherwise, <c>false</c>.</returns>
         internal static bool ValidatePersonName(string name, out string errorMessage)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -69,6 +95,12 @@ namespace FACEIT.FaceService.Utilities
             return true;
         }
 
+        /// <summary>
+        /// Validates the specified image ID.
+        /// </summary>
+        /// <param name="imageId">The image ID to validate.</param>
+        /// <param name="errorMessage">The error message if validation fails.</param>
+        /// <returns><c>true</c> if the image ID is valid; otherwise, <c>false</c>.</returns>
         internal static bool ValidateImageId(string imageId, out string errorMessage)
         {
             if (string.IsNullOrWhiteSpace(imageId))

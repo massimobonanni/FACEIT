@@ -8,20 +8,39 @@ using System.Threading.Tasks;
 
 namespace FACEIT.FaceService.Entities
 {
+    /// <summary>
+    /// Represents a person with an ID, name, user data, and persisted face IDs.
+    /// </summary>
     internal class Person
     {
-        [JsonPropertyName("personId")] 
+        /// <summary>
+        /// Gets or sets the unique identifier for the person.
+        /// </summary>
+        [JsonPropertyName("personId")]
         public string Id { get; set; }
 
-        [JsonPropertyName("name")] 
+        /// <summary>
+        /// Gets or sets the name of the person.
+        /// </summary>
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonPropertyName("userData")] 
+        /// <summary>
+        /// Gets or sets the user data associated with the person.
+        /// </summary>
+        [JsonPropertyName("userData")]
         public string UserData { get; set; }
 
-        [JsonPropertyName("persistedFaceIds")] 
+        /// <summary>
+        /// Gets or sets the collection of persisted face IDs associated with the person.
+        /// </summary>
+        [JsonPropertyName("persistedFaceIds")]
         public IEnumerable<string>? PersistedFaceIds { get; set; }
 
+        /// <summary>
+        /// Converts the current instance to a Core.Entities.Person object.
+        /// </summary>
+        /// <returns>A Core.Entities.Person object with the same data.</returns>
         internal Core.Entities.Person ToCorePerson()
         {
             IDictionary<string, string>? properties = null;

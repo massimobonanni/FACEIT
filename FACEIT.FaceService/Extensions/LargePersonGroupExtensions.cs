@@ -9,8 +9,16 @@ using System.Threading.Tasks;
 
 namespace Azure.AI.Vision.Face
 {
+    /// <summary>
+    /// Provides extension methods for the <see cref="LargePersonGroup"/> class.
+    /// </summary>
     internal static class LargePersonGroupExtensions
     {
+        /// <summary>
+        /// Converts a <see cref="LargePersonGroup"/> instance to a <see cref="Group"/> instance.
+        /// </summary>
+        /// <param name="source">The <see cref="LargePersonGroup"/> instance to convert.</param>
+        /// <returns>A <see cref="Group"/> instance with properties copied from the <see cref="LargePersonGroup"/> instance.</returns>
         internal static Group ToCoreGroup(this LargePersonGroup source)
         {
             IDictionary<string, string>? properties = null;

@@ -8,8 +8,16 @@ using System.Threading.Tasks;
 
 namespace Azure.AI.Vision.Face
 {
+    /// <summary>
+    /// Provides extension methods for converting <see cref="LargePersonGroupPerson"/> objects to <see cref="Person"/> objects.
+    /// </summary>
     internal static class LargePersonGroupPersonExtensions
     {
+        /// <summary>
+        /// Converts a <see cref="LargePersonGroupPerson"/> object to a <see cref="Person"/> object.
+        /// </summary>
+        /// <param name="source">The <see cref="LargePersonGroupPerson"/> object to convert.</param>
+        /// <returns>A <see cref="Person"/> object that represents the converted <see cref="LargePersonGroupPerson"/>.</returns>
         internal static Person ToCorePerson(this LargePersonGroupPerson source)
         {
             IDictionary<string, string>? properties = null;
@@ -32,6 +40,5 @@ namespace Azure.AI.Vision.Face
                 PersistedFaceIds = persistedfaceIds
             };
         }
-
     }
 }
