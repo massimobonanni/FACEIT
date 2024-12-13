@@ -82,7 +82,7 @@ namespace FACEIT.Client.Views
 
         private void MainWindow_Loaded(object sender, System.Windows.RoutedEventArgs e)
         {
-            capture.Open(0, VideoCaptureAPIs.ANY);
+            capture.Open(2, VideoCaptureAPIs.ANY);
             if (!capture.IsOpened())
             {
                 Close();

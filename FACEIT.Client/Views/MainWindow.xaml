@@ -87,14 +87,15 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Label Grid.Row="0" Grid.ColumnSpan="2">Person detail:</Label>
+                            <Label Grid.Row="0" Grid.ColumnSpan="2" FontSize="20">Person detail:</Label>
 
-                            <Label Grid.Column="0" Grid.Row="1" Margin="0,5,0,5">ID:</Label>
-                            <Label Grid.Column="1" Grid.Row="1" Content="{Binding RecognizedPerson.Person.Id}" Margin="0,5,0,5"></Label>
-                            <Label Grid.Column="0" Grid.Row="2" Margin="0,5,0,5">Name:</Label>
-                            <Label Grid.Column="1" Grid.Row="2" Content="{Binding RecognizedPerson.Person.Name}" Margin="0,5,0,5"></Label>
-                            <Label Grid.Column="0" Grid.Row="3" Margin="0,5,0,5">Enabled:</Label>
-                            <CheckBox Grid.Column="1" Grid.Row="3" IsChecked="{Binding RecognizedPerson.Person.Enabled}" Margin="0,5,0,5" IsEnabled="False"></CheckBox>
+                            <Label Grid.Column="0" Grid.Row="1" Margin="0,5,0,5" FontSize="20">ID:</Label>
+                            <Label Grid.Column="1" Grid.Row="1" FontSize="20" Content="{Binding RecognizedPerson.Person.Id}" Margin="0,5,0,5"></Label>
+                            <Label Grid.Column="0" Grid.Row="2" FontSize="20" Margin="0,5,0,5">Name:</Label>
+                            <Label Grid.Column="1" Grid.Row="2" FontSize="20" Content="{Binding RecognizedPerson.Person.Name}" Margin="0,5,0,5"></Label>
+                            <Label Grid.Column="0" Grid.Row="3" FontSize="20" Margin="0,5,0,5">Enabled:</Label>
+                            <CheckBox Grid.Column="1" Grid.Row="3" IsChecked="{Binding RecognizedPerson.Person.Enabled}" 
+                                      Margin="0,5,0,5" IsEnabled="False" VerticalAlignment="Center"></CheckBox>
                         </Grid>
                     </Grid>
                     <Grid Margin="30" Background="white" Height="100" VerticalAlignment="Center"
