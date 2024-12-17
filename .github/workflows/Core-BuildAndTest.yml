@@ -52,13 +52,14 @@ jobs:
           report_name: SCR_Core_Test_Report
           report_title: FACEIT.Core Test Report
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          fail_build_on_failed_tests: true
 
       - name: dotnet publish
-        run: dotnet publish ${{ env.CORE_ROOT }} -c Release -o ${{env.CORE_ROOT}}/Publish
+        run: dotnet publish ${{ env.CORE_ROOT }} -c Release -o ${{ env.CORE_ROOT }}/Publish
 
       - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: .net-app
           path: ${{env.CORE_ROOT}}/Publish
-          retention-days: 5
+          retention-days: 30
