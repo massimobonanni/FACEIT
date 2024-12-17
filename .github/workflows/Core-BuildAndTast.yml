@@ -9,7 +9,7 @@ on:
       - 'FACEIT.Core/**'
       - 'Tests/FACEIT.Core.Tests/**'
     branches:
-      - main
+      - master
   workflow_dispatch:
 
 env:
