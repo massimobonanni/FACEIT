@@ -40,7 +40,14 @@ namespace FACEIT.FaceService.Entities
             IDictionary<string, string>? properties = null;
             if (!string.IsNullOrEmpty(UserData))
             {
-                properties = JsonSerializer.Deserialize<IDictionary<string, string>>(UserData);
+                try
+                {
+                    properties = JsonSerializer.Deserialize<IDictionary<string, string>>(UserData);
+                }
+                catch (JsonException)
+                {
+                    properties = null;
+                }
             }
 
             return new Core.Entities.Group()

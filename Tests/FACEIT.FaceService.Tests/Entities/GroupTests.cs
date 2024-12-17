@@ -74,5 +74,25 @@ namespace FACEIT.FaceService.Tests.Entities
             Assert.Equal("Test Group", coreGroup.Name);
             Assert.Null(coreGroup.Properties);
         }
+
+        [Fact]
+        public void ToCoreGroup_WithInvalidUserData_ReturnsCoreGroupWithNullProperties()
+        {
+            // Arrange
+            var group = new Group
+            {
+                LargePersonGroupId = "testGroupId",
+                Name = "Test Group",
+                UserData = "invalid json"
+            };
+
+            // Act
+            var coreGroup = group.ToCoreGroup();
+
+            // Assert
+            Assert.Equal("testGroupId", coreGroup.Id);
+            Assert.Equal("Test Group", coreGroup.Name);
+            Assert.Null(coreGroup.Properties);
+        }
     }
 }
