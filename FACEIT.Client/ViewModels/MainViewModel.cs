@@ -115,39 +115,46 @@ internal partial class MainViewModel : BaseViewModel, IRecipient<FrameCapturedMe
         var tempFaceResponse = await this._faceRecognizer.DetectAsync(memStream, 60);
         if (tempFaceResponse.Success)
         {
-            var faceResponse = await this._faceRecognizer.RecognizeAsync(this.SelectedGroup.Id, tempFaceResponse.Data, 0.80f);
-            if (faceResponse.Success)
+            if (tempFaceResponse.Data != null)
             {
-                if (faceResponse.Data == null || !faceResponse.Data.Any())
+                var faceResponse = await this._faceRecognizer.RecognizeAsync(this.SelectedGroup.Id, tempFaceResponse.Data, 0.80f);
+                if (faceResponse.Success)
                 {
-                    this.ShowRecognizedPersonPanel = true;
-                    this.RecognizedPerson = null;
-                    _messenger.Send(new PersonRecognizedMessage(this.RecognizedPerson));
-                }
-                else
-                {
-                    var personRecognized = faceResponse.Data.OrderByDescending(p => p.Confidence).First();
-                    var personResponse = await this._personsManager.GetPersonAsync(this.SelectedGroup.Id, personRecognized.Id);
-                    if (personResponse.Success)
+                    if (faceResponse.Data == null || !faceResponse.Data.Any())
                     {
-                        this.RecognizedPerson = new Client.Entities.RecognizedPerson
-                        {
-                            Id = personRecognized.Id,
-                            Person = new Entities.Person(personResponse.Data),
-                            Confidence = personRecognized.Confidence
-                        };
                         this.ShowRecognizedPersonPanel = true;
+                        this.RecognizedPerson = null;
                         _messenger.Send(new PersonRecognizedMessage(this.RecognizedPerson));
                     }
                     else
                     {
-                        SetErrorMessage(personResponse);
+                        var personRecognized = faceResponse.Data.OrderByDescending(p => p.Confidence).First();
+                        var personResponse = await this._personsManager.GetPersonAsync(this.SelectedGroup.Id, personRecognized.Id);
+                        if (personResponse.Success)
+                        {
+                            this.RecognizedPerson = new Client.Entities.RecognizedPerson
+                            {
+                                Id = personRecognized.Id,
+                                Person = new Entities.Person(personResponse.Data),
+                                Confidence = personRecognized.Confidence
+                            };
+                            this.ShowRecognizedPersonPanel = true;
+                            _messenger.Send(new PersonRecognizedMessage(this.RecognizedPerson));
+                        }
+                        else
+                        {
+                            SetErrorMessage(personResponse);
+                        }
                     }
+                }
+                else
+                {
+                    SetErrorMessage(faceResponse);
                 }
             }
             else
             {
-                SetErrorMessage(faceResponse);
+                SetErrorMessage("No face detected");
             }
         }
         else

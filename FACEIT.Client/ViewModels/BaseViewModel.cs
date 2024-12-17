@@ -31,14 +31,19 @@ namespace FACEIT.Client.ViewModels
 
         protected void SetErrorMessage(Core.Entities.Response response)
         {
-            if (response.Success)
+            SetErrorMessage(response.Success ? response.Message: null);
+        }
+
+        protected void SetErrorMessage(string message)
+        {
+            if (string.IsNullOrEmpty(message))
             {
                 this.ErrorMessage = null;
                 this.IsErrorMessageVisible = false;
             }
             else
             {
-                this.ErrorMessage = response.Message;
+                this.ErrorMessage = message;
                 this.IsErrorMessageVisible = true;
             }
         }
