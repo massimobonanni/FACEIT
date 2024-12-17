@@ -1,0 +1,64 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and Test FACEIT.Core
+
+on:
+  push:
+    paths:
+      - 'FACEIT.Core/**'
+      - 'Tests/FACEIT.Core.Tests/**'
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+    CORE_ROOT: ${{ github.workspace }}/FACEIT.Core
+
+jobs:
+  buildAndTest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: '8.x'
+          include-prerelease: false
+
+      - name: retrieve datetime from action
+        id: getDate
+        uses: Kaven-Universe/github-action-current-date-time@v1
+        with:
+          format: "1.YYYY.MMDD"
+
+      - name: Set version in all AssemblyInfo.cs files
+        id: set-assembly-version
+        uses: secondbounce/assemblyinfo-update@v2
+        with:
+          version: ${{ steps.getDate.outputs.time }}
+          directory: '${{ env.CORE_ROOT }}'
+          recursive: false
+          
+      - name: Build with dotnet
+        run: dotnet build ${{ env.CORE_ROOT }} --configuration Release
+
+      - name: Core classes tests
+        uses: zyborg/dotnet-tests-report@v1
+        with:
+          project_path: Tests/FACEIT.Core.Tests
+          report_name: SCR_Core_Test_Report
+          report_title: FACEIT.Core Test Report
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: dotnet publish
+        run: dotnet publish ${{ env.CORE_ROOT }} -c Release -o ${{env.CORE_ROOT}}/Publish
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v3
+        with:
+          name: .net-app
+          path: ${{env.CORE_ROOT}}/Publish
+          retention-days: 5
