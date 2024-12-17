@@ -1,0 +1,75 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and Test FACEIT.FaceService
+
+on:
+  push:
+    paths:
+      - 'FACEIT.Core/**'
+      - 'FACEIT.FaceService/**'
+      - 'Tests/FACEIT.FaceService.Tests/**'
+    branches:
+      - master
+  workflow_dispatch:
+
+env:
+    CORE_ROOT: ${{ github.workspace }}/FACEIT.Core
+    FACESERVICE_ROOT: ${{ github.workspace }}/FACEIT.FaceService
+
+jobs:
+  buildAndTest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: '8.x'
+          include-prerelease: false
+
+      - name: retrieve datetime from action
+        id: getDate
+        uses: Kaven-Universe/github-action-current-date-time@v1
+        with:
+          format: "1.YYYY.MMDD"
+
+      - name: Set version in AssemblyInfo.cs files for CORE
+        id: set-core-assembly-version
+        uses: secondbounce/assemblyinfo-update@v2
+        with:
+          version: ${{ steps.getDate.outputs.time }}
+          directory: '${{ env.CORE_ROOT }}'
+          recursive: false
+          
+      - name: Set version in AssemblyInfo.cs files for FACESERVICE
+        id: set-faceservice-assembly-version
+        uses: secondbounce/assemblyinfo-update@v2
+        with:
+          version: ${{ steps.getDate.outputs.time }}
+          directory: '${{ env.FACESERVICE_ROOT }}'
+          recursive: false
+
+      - name: Build with dotnet
+        run: dotnet build ${{ env.FACESERVICE_ROOT }} --configuration Release
+
+      - name: Core classes tests
+        uses: zyborg/dotnet-tests-report@v1
+        with:
+          project_path: Tests/FACEIT.FaceService.Tests
+          report_name: SCR_FaceService_Test_Report
+          report_title: FACEIT.FaceService Test Report
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          fail_build_on_failed_tests: true
+
+      - name: dotnet publish
+        run: dotnet publish ${{ env.FACESERVICE_ROOT }} -c Release -o ${{ env.FACESERVICE_ROOT }}/Publish
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: .net-app
+          path: ${{env.FACESERVICE_ROOT}}/Publish
+          retention-days: 30
