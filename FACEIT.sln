@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{BAD77A3C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FACEIT.Core.Tests", "Tests\FACEIT.Core.Tests\FACEIT.Core.Tests.csproj", "{7A4D3E98-B759-4EE7-86A6-B15A46168F07}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FACEIT.FaceService.Tests", "Tests\FACEIT.FaceService.Tests\FACEIT.FaceService.Tests.csproj", "{FBE25202-9006-41FA-B55C-10C37E0C947D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,12 +43,17 @@ Global
 		{7A4D3E98-B759-4EE7-86A6-B15A46168F07}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A4D3E98-B759-4EE7-86A6-B15A46168F07}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7A4D3E98-B759-4EE7-86A6-B15A46168F07}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBE25202-9006-41FA-B55C-10C37E0C947D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBE25202-9006-41FA-B55C-10C37E0C947D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBE25202-9006-41FA-B55C-10C37E0C947D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBE25202-9006-41FA-B55C-10C37E0C947D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{7A4D3E98-B759-4EE7-86A6-B15A46168F07} = {BAD77A3C-79EC-44D3-A59A-DA3C78DF259C}
+		{FBE25202-9006-41FA-B55C-10C37E0C947D} = {BAD77A3C-79EC-44D3-A59A-DA3C78DF259C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D7ED2FC6-E762-4BC1-A632-A35644B040E9}
