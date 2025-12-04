@@ -45,7 +45,7 @@ namespace FACEIT.Console.Commands.RecognizePerson
 
             _confidenceOption = new Option<int>("--confidence", "-c")
             {
-                Description = "The confidence of the recognition (in percentage, between 0 and 100). The dafault value is 75.",
+                Description = "The confidence of the recognition (in percentage, between 0 and 100). The default value is 75.",
                 DefaultValueFactory = _ => 75
             };
             Options.Add(_confidenceOption);

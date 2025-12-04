@@ -6,6 +6,8 @@ namespace FACEIT.Console.Services
 {
     /// <summary>
     /// Factory class for creating face service instances.
+    /// FacesManager implements IGroupsManager, IPersonsManager, and IFaceRecognizer interfaces,
+    /// so all factory methods return the same underlying implementation but expose different interfaces.
     /// </summary>
     internal class FaceServiceFactory : IFaceServiceFactory
     {

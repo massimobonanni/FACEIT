@@ -11,7 +11,7 @@ namespace FACEIT.Console.Commands.GetTrainingStatus
         private readonly Option<string?> _apiKeyOption;
         private readonly Option<string> _groupIdOption;
 
-        public GetTrainingStatusCommand(IFaceServiceFactory faceServiceFactory) : base("train-status", "Retrieve the status of a trainig for a group")
+        public GetTrainingStatusCommand(IFaceServiceFactory faceServiceFactory) : base("train-status", "Retrieve the status of a training for a group")
         {
             _faceServiceFactory = faceServiceFactory;
 
