@@ -1,72 +1,74 @@
-﻿using FACEIT.Console.Binders;
+﻿using FACEIT.Console.Services;
 using FACEIT.Console.Utilities;
-using FACEIT.Core.Interfaces;
 using System.CommandLine;
 
 namespace FACEIT.Console.Commands.GetPerson
 {
     internal class GetPersonCommand : Command
     {
-        public GetPersonCommand() : base("get-person", "Returns a person in a specific group")
+        private readonly IFaceServiceFactory _faceServiceFactory;
+        private readonly Option<string?> _endpointOption;
+        private readonly Option<string?> _apiKeyOption;
+        private readonly Option<string> _groupIdOption;
+        private readonly Option<string> _personIdOption;
+
+        public GetPersonCommand(IFaceServiceFactory faceServiceFactory) : base("get-person", "Returns a person in a specific group")
         {
-            var endpointOption = new Option<string>(
-                name: "--endpoint",
-                description: "The endpoint of Azure Face Service resource.")
-            {
-                IsRequired = false,
-            };
-            endpointOption.AddAlias("-e");
-            AddOption(endpointOption);
+            _faceServiceFactory = faceServiceFactory;
 
-            var apiKeyOption = new Option<string>(
-                name: "--api-key",
-                description: "The API key of Azure Face Service resource.")
+            _endpointOption = new Option<string?>("--endpoint", "-e")
             {
-                IsRequired = false,
+                Description = "The endpoint of Azure Face Service resource."
             };
-            apiKeyOption.AddAlias("-k");
-            AddOption(apiKeyOption);
+            Options.Add(_endpointOption);
 
-            var groupIdOption = new Option<string>(
-                name: "--group-id",
-                description: "The id of the group.")
+            _apiKeyOption = new Option<string?>("--api-key", "-k")
             {
-                IsRequired = true,
+                Description = "The API key of Azure Face Service resource."
             };
-            groupIdOption.AddAlias("-gi");
-            AddOption(groupIdOption);
+            Options.Add(_apiKeyOption);
 
-            var personIdOption = new Option<string>(
-                name: "--person-id",
-                description: "The id of the person.")
+            _groupIdOption = new Option<string>("--group-id", "-gi")
             {
-                IsRequired = true,
+                Description = "The id of the group.",
+                Required = true
             };
-            personIdOption.AddAlias("-pi");
-            AddOption(personIdOption);
+            Options.Add(_groupIdOption);
 
-            this.SetHandler(CommandHandler, groupIdOption, personIdOption, new PersonsManagerBinder(endpointOption, apiKeyOption));
+            _personIdOption = new Option<string>("--person-id", "-pi")
+            {
+                Description = "The id of the person.",
+                Required = true
+            };
+            Options.Add(_personIdOption);
+
+            this.SetAction(CommandHandler);
         }
 
-        private async Task CommandHandler(string groupId, string personId, IPersonsManager personsManager)
+        private async Task CommandHandler(ParseResult parseResult, CancellationToken cancellationToken)
         {
+            var endpoint = parseResult.GetValue(_endpointOption);
+            var apiKey = parseResult.GetValue(_apiKeyOption);
+            var groupId = parseResult.GetValue(_groupIdOption)!;
+            var personId = parseResult.GetValue(_personIdOption)!;
+
+            var personsManager = _faceServiceFactory.CreatePersonsManager(endpoint, apiKey);
+
             ConsoleUtility.WriteLineWithTimestamp($"Retrieving person {personId} from the group {groupId}");
 
-            var response = await personsManager.GetPersonAsync(groupId,personId);
+            var response = await personsManager.GetPersonAsync(groupId, personId, cancellationToken);
 
             if (response.Success)
             {
-                ConsoleUtility.DisplayPerson(response.Data);
+                if (response.Data != null)
+                {
+                    ConsoleUtility.DisplayPerson(response.Data);
+                }
             }
             else
             {
                 ConsoleUtility.WriteLineWithTimestamp($"Failed to retrieve persons from group {groupId}. {response.Message}", ConsoleColor.Red);
             }
         }
-
-
-
     }
-
-
 }

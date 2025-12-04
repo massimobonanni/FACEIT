@@ -1,53 +1,57 @@
-﻿using FACEIT.Console.Binders;
+﻿using FACEIT.Console.Services;
 using FACEIT.Console.Utilities;
-using FACEIT.Core.Interfaces;
 using System.CommandLine;
 
 namespace FACEIT.Console.Commands.GetPersons
 {
     internal class GetPersonsCommand : Command
     {
-        public GetPersonsCommand() : base("get-persons", "Returns the list of persons in a specific group")
+        private readonly IFaceServiceFactory _faceServiceFactory;
+        private readonly Option<string?> _endpointOption;
+        private readonly Option<string?> _apiKeyOption;
+        private readonly Option<string> _groupIdOption;
+
+        public GetPersonsCommand(IFaceServiceFactory faceServiceFactory) : base("get-persons", "Returns the list of persons in a specific group")
         {
-            var endpointOption = new Option<string>(
-                name: "--endpoint",
-                description: "The endpoint of Azure Face Service resource.")
-            {
-                IsRequired = false,
-            };
-            endpointOption.AddAlias("-e");
-            AddOption(endpointOption);
+            _faceServiceFactory = faceServiceFactory;
 
-            var apiKeyOption = new Option<string>(
-                name: "--api-key",
-                description: "The API key of Azure Face Service resource.")
+            _endpointOption = new Option<string?>("--endpoint", "-e")
             {
-                IsRequired = false,
+                Description = "The endpoint of Azure Face Service resource."
             };
-            apiKeyOption.AddAlias("-k");
-            AddOption(apiKeyOption);
-            
-            var groupIdOption = new Option<string>(
-                name: "--group-id",
-                description: "The id of the group.")
-            {
-                IsRequired = true,
-            };
-            groupIdOption.AddAlias("-gi");
-            AddOption(groupIdOption);
+            Options.Add(_endpointOption);
 
-            this.SetHandler(CommandHandler, groupIdOption, new PersonsManagerBinder(endpointOption, apiKeyOption));
+            _apiKeyOption = new Option<string?>("--api-key", "-k")
+            {
+                Description = "The API key of Azure Face Service resource."
+            };
+            Options.Add(_apiKeyOption);
+
+            _groupIdOption = new Option<string>("--group-id", "-gi")
+            {
+                Description = "The id of the group.",
+                Required = true
+            };
+            Options.Add(_groupIdOption);
+
+            this.SetAction(CommandHandler);
         }
 
-        private async Task CommandHandler(string groupId, IPersonsManager personsManager)
+        private async Task CommandHandler(ParseResult parseResult, CancellationToken cancellationToken)
         {
+            var endpoint = parseResult.GetValue(_endpointOption);
+            var apiKey = parseResult.GetValue(_apiKeyOption);
+            var groupId = parseResult.GetValue(_groupIdOption)!;
+
+            var personsManager = _faceServiceFactory.CreatePersonsManager(endpoint, apiKey);
+
             ConsoleUtility.WriteLineWithTimestamp($"Retrieving persons from the group {groupId}");
 
-            var response = await personsManager.GetPersonsByGroupAsync(groupId);
+            var response = await personsManager.GetPersonsByGroupAsync(groupId, cancellationToken);
 
             if (response.Success)
             {
-                if (response.Data.Any())
+                if (response.Data != null && response.Data.Any())
                 {
                     foreach (var person in response.Data)
                     {
@@ -64,10 +68,5 @@ namespace FACEIT.Console.Commands.GetPersons
                 ConsoleUtility.WriteLineWithTimestamp($"Failed to retrieve persons from group {groupId}. {response.Message}", ConsoleColor.Red);
             }
         }
-
-
-
     }
-
-
 }

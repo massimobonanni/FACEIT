@@ -11,7 +11,10 @@ using FACEIT.Console.Commands.RemoveGroupCommand;
 using FACEIT.Console.Commands.RemoveImageFromPerson;
 using FACEIT.Console.Commands.TrainGroup;
 using FACEIT.Console.Commands.UpdateGroup;
+using FACEIT.Console.Services;
 using FACEIT.Console.Utilities;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.CommandLine;
 
 
@@ -23,28 +26,37 @@ namespace FACEIT.Console
         {
             ConsoleUtility.WriteApplicationBanner();
 
+            // Set up dependency injection
+            var services = new ServiceCollection();
+            services.AddLogging(builder => builder.AddConsole());
+            services.AddSingleton<HttpClient>();
+            services.AddSingleton<IFaceServiceFactory, FaceServiceFactory>();
+
+            var serviceProvider = services.BuildServiceProvider();
+            var faceServiceFactory = serviceProvider.GetRequiredService<IFaceServiceFactory>();
+
             var rootCommand = new RootCommand("Console for managing FACEIT features");
 
-            rootCommand.AddCommand(new AddImageToPersonCommand());
+            rootCommand.Subcommands.Add(new AddImageToPersonCommand(faceServiceFactory));
 
-            rootCommand.AddCommand(new ClearAllCommand());
-            rootCommand.AddCommand(new CreateGroupCommand());
-            rootCommand.AddCommand(new CreatePersonCommand());
+            rootCommand.Subcommands.Add(new ClearAllCommand(faceServiceFactory));
+            rootCommand.Subcommands.Add(new CreateGroupCommand(faceServiceFactory));
+            rootCommand.Subcommands.Add(new CreatePersonCommand(faceServiceFactory));
 
-            rootCommand.AddCommand(new GetGroupCommand());
-            rootCommand.AddCommand(new GetGroupsCommand());
-            rootCommand.AddCommand(new GetPersonsCommand());
-            rootCommand.AddCommand(new GetTrainingStatusCommand());
+            rootCommand.Subcommands.Add(new GetGroupCommand(faceServiceFactory));
+            rootCommand.Subcommands.Add(new GetGroupsCommand(faceServiceFactory));
+            rootCommand.Subcommands.Add(new GetPersonsCommand(faceServiceFactory));
+            rootCommand.Subcommands.Add(new GetTrainingStatusCommand(faceServiceFactory));
 
-            rootCommand.AddCommand(new RecognizePersonCommand());
-            rootCommand.AddCommand(new RemoveGroupCommand());
-            rootCommand.AddCommand(new RemoveImageFromPersonCommand());
+            rootCommand.Subcommands.Add(new RecognizePersonCommand(faceServiceFactory));
+            rootCommand.Subcommands.Add(new RemoveGroupCommand(faceServiceFactory));
+            rootCommand.Subcommands.Add(new RemoveImageFromPersonCommand(faceServiceFactory));
 
-            rootCommand.AddCommand(new TrainGroupCommand());
+            rootCommand.Subcommands.Add(new TrainGroupCommand(faceServiceFactory));
             
-            rootCommand.AddCommand(new UpdateGroupCommand());
+            rootCommand.Subcommands.Add(new UpdateGroupCommand(faceServiceFactory));
 
-            return await rootCommand.InvokeAsync(args);
+            return await rootCommand.Parse(args).InvokeAsync();
         }
     }
 }

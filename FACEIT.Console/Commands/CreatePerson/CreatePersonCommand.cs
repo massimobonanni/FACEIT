@@ -1,84 +1,81 @@
-﻿using FACEIT.Console.Binders;
+﻿using FACEIT.Console.Services;
 using FACEIT.Console.Utilities;
-using FACEIT.Core.Interfaces;
 using System.CommandLine;
 
 namespace FACEIT.Console.Commands.CreatePerson
 {
     internal class CreatePersonCommand : Command
     {
-        public CreatePersonCommand() : base("create-person", "Create a person in a group")
+        private readonly IFaceServiceFactory _faceServiceFactory;
+        private readonly Option<string?> _endpointOption;
+        private readonly Option<string?> _apiKeyOption;
+        private readonly Option<string> _groupIdOption;
+        private readonly Option<string> _personNameOption;
+        private readonly Option<IEnumerable<string>?> _personPropertiesOption;
+
+        public CreatePersonCommand(IFaceServiceFactory faceServiceFactory) : base("create-person", "Create a person in a group")
         {
-            var endpointOption = new Option<string>(
-                name: "--endpoint",
-                description: "The endpoint of Azure Face Service resource.")
-            {
-                IsRequired = false,
-            };
-            endpointOption.AddAlias("-e");
-            AddOption(endpointOption);
+            _faceServiceFactory = faceServiceFactory;
 
-            var apiKeyOption = new Option<string>(
-                name: "--api-key",
-                description: "The API key of Azure Face Service resource.")
+            _endpointOption = new Option<string?>("--endpoint", "-e")
             {
-                IsRequired = false,
+                Description = "The endpoint of Azure Face Service resource."
             };
-            apiKeyOption.AddAlias("-k");
-            AddOption(apiKeyOption);
+            Options.Add(_endpointOption);
 
-            var groupIdOption = new Option<string>(
-                name: "--group-id",
-                description: "The id of the group.")
+            _apiKeyOption = new Option<string?>("--api-key", "-k")
             {
-                IsRequired = true,
+                Description = "The API key of Azure Face Service resource."
             };
-            groupIdOption.AddAlias("-gi");
-            AddOption(groupIdOption);
+            Options.Add(_apiKeyOption);
 
-            var personNameOption = new Option<string>(
-                name: "--person-name",
-                description: "The name of the person.")
+            _groupIdOption = new Option<string>("--group-id", "-gi")
             {
-                IsRequired = true,
+                Description = "The id of the group.",
+                Required = true
             };
-            personNameOption.AddAlias("-pn");
-            AddOption(personNameOption);
+            Options.Add(_groupIdOption);
 
-            var personPropertiesOption = new Option<IEnumerable<string>>(
-                name: "--person-properties",
-                description: "The properties of the person in the form 'key:value'.")
+            _personNameOption = new Option<string>("--person-name", "-pn")
             {
-                IsRequired = false,
+                Description = "The name of the person.",
+                Required = true
+            };
+            Options.Add(_personNameOption);
+
+            _personPropertiesOption = new Option<IEnumerable<string>?>("--person-properties", "-pp")
+            {
+                Description = "The properties of the person in the form 'key:value'.",
                 AllowMultipleArgumentsPerToken = true
             };
-            personPropertiesOption.AddAlias("-pp");
-            AddOption(personPropertiesOption);
+            Options.Add(_personPropertiesOption);
 
-
-            this.SetHandler(CommandHandler, groupIdOption, personNameOption, personPropertiesOption, new PersonsManagerBinder(endpointOption, apiKeyOption));
+            this.SetAction(CommandHandler);
         }
 
-        private async Task CommandHandler( string groupId, string personName, IEnumerable<string> personProperties, IPersonsManager personsManager)
+        private async Task CommandHandler(ParseResult parseResult, CancellationToken cancellationToken)
         {
+            var endpoint = parseResult.GetValue(_endpointOption);
+            var apiKey = parseResult.GetValue(_apiKeyOption);
+            var groupId = parseResult.GetValue(_groupIdOption)!;
+            var personName = parseResult.GetValue(_personNameOption)!;
+            var personProperties = parseResult.GetValue(_personPropertiesOption);
+
+            var personsManager = _faceServiceFactory.CreatePersonsManager(endpoint, apiKey);
+
             ConsoleUtility.WriteLineWithTimestamp($"Creating person {personName} in the group {groupId}.");
 
-            var properties = personProperties.ToProperties();
-            var response = await personsManager.CreatePersonAsync(groupId, personName, properties);
+            var properties = (personProperties ?? Enumerable.Empty<string>()).ToProperties();
+            var response = await personsManager.CreatePersonAsync(groupId, personName, properties, cancellationToken);
 
             if (response.Success)
             {
-                ConsoleUtility.WriteLineWithTimestamp($"Person {personName} created successfully with id {response.Data.Id}.", ConsoleColor.Green);
+                ConsoleUtility.WriteLineWithTimestamp($"Person {personName} created successfully with id {response.Data?.Id}.", ConsoleColor.Green);
             }
             else
             {
                 ConsoleUtility.WriteLineWithTimestamp($"Failed to create person {personName} in the group {groupId}. {response.Message}", ConsoleColor.Red);
             }
         }
-
-
-
     }
-
-
 }
