@@ -161,11 +161,11 @@ internal partial class PersonsManagementViewModel : BaseViewModel, IRecipient<Fr
     [NotifyPropertyChangedFor(nameof(IsGroupSelected))]
     private Client.Entities.Group selectedGroup;
 
-    partial void OnSelectedGroupChanged(Entities.Group value)
+    async partial void OnSelectedGroupChanged(Entities.Group value)
     {
         //IsBusy = true;
         if (IsGroupSelected)
-            LoadPersonsAsync();
+            await LoadPersonsAsync();
         else
             Persons.Clear();
         //IsBusy = false;

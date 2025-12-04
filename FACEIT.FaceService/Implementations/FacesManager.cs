@@ -398,7 +398,7 @@ namespace FACEIT.FaceService.Implementations
 
             var groups = await this.GetGroupsAsync(token);
 
-            if (groups.Success)
+            if (groups.Success && groups.Data != null)
             {
                 foreach (var group in groups.Data)
                 {

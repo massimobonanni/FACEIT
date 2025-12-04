@@ -17,19 +17,19 @@ namespace FACEIT.FaceService.Entities
         /// Gets or sets the unique identifier for the person.
         /// </summary>
         [JsonPropertyName("personId")]
-        public string Id { get; set; }
+        public required string Id { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the person.
         /// </summary>
         [JsonPropertyName("name")]
-        public string Name { get; set; }
+        public required string Name { get; set; }
 
         /// <summary>
         /// Gets or sets the user data associated with the person.
         /// </summary>
         [JsonPropertyName("userData")]
-        public string UserData { get; set; }
+        public string? UserData { get; set; }
 
         /// <summary>
         /// Gets or sets the collection of persisted face IDs associated with the person.

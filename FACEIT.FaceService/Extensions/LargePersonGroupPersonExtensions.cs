@@ -26,7 +26,7 @@ namespace Azure.AI.Vision.Face
                 properties = JsonSerializer.Deserialize<IDictionary<string, string>>(source.UserData);
             }
 
-            IEnumerable<string> persistedfaceIds = null;
+            IEnumerable<string>? persistedfaceIds = null;
             if (source.PersistedFaceIds != null)
             {
                 persistedfaceIds = source.PersistedFaceIds.Select(p => p.ToString());
