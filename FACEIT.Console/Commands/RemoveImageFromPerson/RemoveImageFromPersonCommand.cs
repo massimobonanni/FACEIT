@@ -1,68 +1,71 @@
-﻿using FACEIT.Console.Binders;
+﻿using FACEIT.Console.Services;
 using FACEIT.Console.Utilities;
-using FACEIT.Core.Interfaces;
 using System.CommandLine;
 
 namespace FACEIT.Console.Commands.RemoveImageFromPerson
 {
     internal class RemoveImageFromPersonCommand : Command
     {
-        public RemoveImageFromPersonCommand() : base("remove-image", "Remove a persisted image from a person")
+        private readonly IFaceServiceFactory _faceServiceFactory;
+        private readonly Option<string?> _endpointOption;
+        private readonly Option<string?> _apiKeyOption;
+        private readonly Option<string> _groupIdOption;
+        private readonly Option<string> _personIdOption;
+        private readonly Option<string> _imageIdOption;
+
+        public RemoveImageFromPersonCommand(IFaceServiceFactory faceServiceFactory) : base("remove-image", "Remove a persisted image from a person")
         {
-            var endpointOption = new Option<string>(
-                name: "--endpoint",
-                description: "The endpoint of Azure Face Service resource.")
+            _faceServiceFactory = faceServiceFactory;
+
+            _endpointOption = new Option<string?>("--endpoint", "-e")
             {
-                IsRequired = false,
+                Description = "The endpoint of Azure Face Service resource."
             };
-            endpointOption.AddAlias("-e");
-            AddOption(endpointOption);
+            Options.Add(_endpointOption);
 
-            var apiKeyOption = new Option<string>(
-                name: "--api-key",
-                description: "The API key of Azure Face Service resource.")
+            _apiKeyOption = new Option<string?>("--api-key", "-k")
             {
-                IsRequired = false,
+                Description = "The API key of Azure Face Service resource."
             };
-            apiKeyOption.AddAlias("-k");
-            AddOption(apiKeyOption);
+            Options.Add(_apiKeyOption);
 
-            var groupIdOption = new Option<string>(
-                name: "--group-id",
-                description: "The id of the group.")
+            _groupIdOption = new Option<string>("--group-id", "-gi")
             {
-                IsRequired = true,
+                Description = "The id of the group.",
+                Required = true
             };
-            groupIdOption.AddAlias("-gi");
-            AddOption(groupIdOption);
+            Options.Add(_groupIdOption);
 
-            var personIdOption = new Option<string>(
-                name: "--person-id",
-                description: "The id of the person.")
+            _personIdOption = new Option<string>("--person-id", "-pi")
             {
-                IsRequired = true,
+                Description = "The id of the person.",
+                Required = true
             };
-            personIdOption.AddAlias("-pi");
-            AddOption(personIdOption);
+            Options.Add(_personIdOption);
 
-            var imageIdOption = new Option<string>(
-                name: "--image-id",
-                description: "The id of the image.")
+            _imageIdOption = new Option<string>("--image-id", "-ii")
             {
-                IsRequired = true,
+                Description = "The id of the image.",
+                Required = true
             };
-            imageIdOption.AddAlias("-ii");
-            AddOption(imageIdOption);
+            Options.Add(_imageIdOption);
 
-
-            this.SetHandler(CommandHandler, groupIdOption, personIdOption, imageIdOption, new PersonsManagerBinder(endpointOption, apiKeyOption));
+            this.SetAction(CommandHandler);
         }
 
-        private async Task CommandHandler(string groupId, string personId, string imageId, IPersonsManager personsManager)
+        private async Task CommandHandler(ParseResult parseResult, CancellationToken cancellationToken)
         {
+            var endpoint = parseResult.GetValue(_endpointOption);
+            var apiKey = parseResult.GetValue(_apiKeyOption);
+            var groupId = parseResult.GetValue(_groupIdOption)!;
+            var personId = parseResult.GetValue(_personIdOption)!;
+            var imageId = parseResult.GetValue(_imageIdOption)!;
+
+            var personsManager = _faceServiceFactory.CreatePersonsManager(endpoint, apiKey);
+
             ConsoleUtility.WriteLineWithTimestamp($"Removing image {imageId} to person {personId} in the group {groupId}.");
 
-            var response = await personsManager.RemoveImageFromPersonAsync(groupId, personId, imageId);
+            var response = await personsManager.RemoveImageFromPersonAsync(groupId, personId, imageId, cancellationToken);
 
             if (response.Success)
             {
@@ -73,10 +76,5 @@ namespace FACEIT.Console.Commands.RemoveImageFromPerson
                 ConsoleUtility.WriteLineWithTimestamp($"Failed to remove image {imageId} from person {personId} in the group {groupId}. {response.Message}", ConsoleColor.Red);
             }
         }
-
-
-
     }
-
-
 }

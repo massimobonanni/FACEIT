@@ -1,65 +1,68 @@
-﻿using FACEIT.Console.Binders;
+﻿using FACEIT.Console.Services;
 using FACEIT.Console.Utilities;
-using FACEIT.Core.Interfaces;
 using System.CommandLine;
 
 namespace FACEIT.Console.Commands.AddImageToPerson
 {
     internal class AddImageToPersonCommand : Command
     {
-        public AddImageToPersonCommand() : base("add-image", "Add a persisted image to a person")
+        private readonly IFaceServiceFactory _faceServiceFactory;
+        private readonly Option<string?> _endpointOption;
+        private readonly Option<string?> _apiKeyOption;
+        private readonly Option<string> _groupIdOption;
+        private readonly Option<string> _personIdOption;
+        private readonly Option<string> _imageFileOption;
+
+        public AddImageToPersonCommand(IFaceServiceFactory faceServiceFactory) : base("add-image", "Add a persisted image to a person")
         {
-            var endpointOption = new Option<string>(
-                name: "--endpoint",
-                description: "The endpoint of Azure Face Service resource.")
+            _faceServiceFactory = faceServiceFactory;
+
+            _endpointOption = new Option<string?>("--endpoint", "-e")
             {
-                IsRequired = false,
+                Description = "The endpoint of Azure Face Service resource."
             };
-            endpointOption.AddAlias("-e");
-            AddOption(endpointOption);
+            Options.Add(_endpointOption);
 
-            var apiKeyOption = new Option<string>(
-                name: "--api-key",
-                description: "The API key of Azure Face Service resource.")
+            _apiKeyOption = new Option<string?>("--api-key", "-k")
             {
-                IsRequired = false,
+                Description = "The API key of Azure Face Service resource."
             };
-            apiKeyOption.AddAlias("-k");
-            AddOption(apiKeyOption);
+            Options.Add(_apiKeyOption);
 
-            var groupIdOption = new Option<string>(
-                name: "--group-id",
-                description: "The id of the group.")
+            _groupIdOption = new Option<string>("--group-id", "-gi")
             {
-                IsRequired = true,
+                Description = "The id of the group.",
+                Required = true
             };
-            groupIdOption.AddAlias("-gi");
-            AddOption(groupIdOption);
+            Options.Add(_groupIdOption);
 
-            var personIdOption = new Option<string>(
-                name: "--person-id",
-                description: "The id of the person.")
+            _personIdOption = new Option<string>("--person-id", "-pi")
             {
-                IsRequired = true,
+                Description = "The id of the person.",
+                Required = true
             };
-            personIdOption.AddAlias("-pi");
-            AddOption(personIdOption);
+            Options.Add(_personIdOption);
 
-            var imageFileOption = new Option<string>(
-                name: "--image-file",
-                description: "The file of the image to add to the person.")
+            _imageFileOption = new Option<string>("--image-file", "-f")
             {
-                IsRequired = true,
-              };
-            imageFileOption.AddAlias("-f");
-            AddOption(imageFileOption);
+                Description = "The file of the image to add to the person.",
+                Required = true
+            };
+            Options.Add(_imageFileOption);
 
-
-            this.SetHandler(CommandHandler, groupIdOption, personIdOption, imageFileOption, new PersonsManagerBinder(endpointOption, apiKeyOption));
+            this.SetAction(CommandHandler);
         }
 
-        private async Task CommandHandler(string groupId, string personId, string imageFile, IPersonsManager personsManager)
+        private async Task CommandHandler(ParseResult parseResult, CancellationToken cancellationToken)
         {
+            var endpoint = parseResult.GetValue(_endpointOption);
+            var apiKey = parseResult.GetValue(_apiKeyOption);
+            var groupId = parseResult.GetValue(_groupIdOption)!;
+            var personId = parseResult.GetValue(_personIdOption)!;
+            var imageFile = parseResult.GetValue(_imageFileOption)!;
+
+            var personsManager = _faceServiceFactory.CreatePersonsManager(endpoint, apiKey);
+
             if (File.Exists(imageFile) == false)
             {
                 ConsoleUtility.WriteLineWithTimestamp($"Image file {imageFile} not found.", ConsoleColor.Red);
@@ -70,7 +73,7 @@ namespace FACEIT.Console.Commands.AddImageToPerson
 
             using var imageStream = new FileStream(imageFile, FileMode.Open, FileAccess.Read);
 
-            var response = await personsManager.AddImageToPersonAsync(groupId, personId, imageStream);
+            var response = await personsManager.AddImageToPersonAsync(groupId, personId, imageStream, cancellationToken);
 
             if (response.Success)
             {
@@ -81,10 +84,5 @@ namespace FACEIT.Console.Commands.AddImageToPerson
                 ConsoleUtility.WriteLineWithTimestamp($"Failed to add image to person {personId} in the group {groupId}. {response.Message}", ConsoleColor.Red);
             }
         }
-
-
-
     }
-
-
 }

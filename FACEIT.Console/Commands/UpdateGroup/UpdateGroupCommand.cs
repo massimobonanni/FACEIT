@@ -1,70 +1,72 @@
-﻿using FACEIT.Console.Binders;
+﻿using FACEIT.Console.Services;
 using FACEIT.Console.Utilities;
-using FACEIT.Core.Interfaces;
 using System.CommandLine;
 
 namespace FACEIT.Console.Commands.UpdateGroup
 {
     internal class UpdateGroupCommand : Command
     {
-        public UpdateGroupCommand() : base("update-group", "Update an existing group")
+        private readonly IFaceServiceFactory _faceServiceFactory;
+        private readonly Option<string?> _endpointOption;
+        private readonly Option<string?> _apiKeyOption;
+        private readonly Option<string> _groupIdOption;
+        private readonly Option<string> _groupNameOption;
+        private readonly Option<IEnumerable<string>?> _groupPropertiesOption;
+
+        public UpdateGroupCommand(IFaceServiceFactory faceServiceFactory) : base("update-group", "Update an existing group")
         {
-            var endpointOption = new Option<string>(
-                name: "--endpoint",
-                description: "The endpoint of Azure Face Service resource.")
-            {
-                IsRequired = false,
-            };
-            endpointOption.AddAlias("-e");
-            AddOption(endpointOption);
+            _faceServiceFactory = faceServiceFactory;
 
-            var apiKeyOption = new Option<string>(
-                name: "--api-key",
-                description: "The API key of Azure Face Service resource.")
+            _endpointOption = new Option<string?>("--endpoint", "-e")
             {
-                IsRequired = false,
+                Description = "The endpoint of Azure Face Service resource."
             };
-            apiKeyOption.AddAlias("-k");
-            AddOption(apiKeyOption);
+            Options.Add(_endpointOption);
 
-            var groupIdOption = new Option<string>(
-                name: "--group-id",
-                description: "The id of the group.")
+            _apiKeyOption = new Option<string?>("--api-key", "-k")
             {
-                IsRequired = true,
+                Description = "The API key of Azure Face Service resource."
             };
-            groupIdOption.AddAlias("-gi");
-            AddOption(groupIdOption);
+            Options.Add(_apiKeyOption);
 
-            var groupNameOption = new Option<string>(
-                name: "--group-name",
-                description: "The name of the group.")
+            _groupIdOption = new Option<string>("--group-id", "-gi")
             {
-                IsRequired = true,
+                Description = "The id of the group.",
+                Required = true
             };
-            groupNameOption.AddAlias("-gn");
-            AddOption(groupNameOption);
+            Options.Add(_groupIdOption);
 
-            var groupPropertiesOption = new Option<IEnumerable<string>>(
-                name: "--group-properties",
-                description: "The properties of the group in the form 'key:value'.")
+            _groupNameOption = new Option<string>("--group-name", "-gn")
             {
-                IsRequired = false,
+                Description = "The name of the group.",
+                Required = true
+            };
+            Options.Add(_groupNameOption);
+
+            _groupPropertiesOption = new Option<IEnumerable<string>?>("--group-properties", "-gp")
+            {
+                Description = "The properties of the group in the form 'key:value'.",
                 AllowMultipleArgumentsPerToken = true
             };
-            groupPropertiesOption.AddAlias("-gp");
-            AddOption(groupPropertiesOption);
+            Options.Add(_groupPropertiesOption);
 
-
-            this.SetHandler(CommandHandler,groupIdOption, groupNameOption, groupPropertiesOption, new GroupsManagerBinder(endpointOption, apiKeyOption));
+            this.SetAction(CommandHandler);
         }
 
-        private async Task CommandHandler(string groupId, string groupName, IEnumerable<string> groupProperties, IGroupsManager groupsManager)
+        private async Task CommandHandler(ParseResult parseResult, CancellationToken cancellationToken)
         {
+            var endpoint = parseResult.GetValue(_endpointOption);
+            var apiKey = parseResult.GetValue(_apiKeyOption);
+            var groupId = parseResult.GetValue(_groupIdOption)!;
+            var groupName = parseResult.GetValue(_groupNameOption)!;
+            var groupProperties = parseResult.GetValue(_groupPropertiesOption);
+
+            var groupsManager = _faceServiceFactory.CreateGroupsManager(endpoint, apiKey);
+
             ConsoleUtility.WriteLineWithTimestamp($"Updating group {groupName} with id {groupId}.");
 
-            var properties = groupProperties.ToProperties();
-            var response = await groupsManager.UpdateGroupAsync(groupId, groupName, properties);
+            var properties = (groupProperties ?? Enumerable.Empty<string>()).ToProperties();
+            var response = await groupsManager.UpdateGroupAsync(groupId, groupName, properties, cancellationToken);
 
             if (response.Success)
             {
@@ -75,10 +77,5 @@ namespace FACEIT.Console.Commands.UpdateGroup
                 ConsoleUtility.WriteLineWithTimestamp($"Failed to update group {groupName} with id {groupId}. {response.Message}", ConsoleColor.Red);
             }
         }
-
-
-
     }
-
-
 }

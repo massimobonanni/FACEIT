@@ -1,48 +1,52 @@
-﻿using FACEIT.Console.Binders;
+﻿using FACEIT.Console.Services;
 using FACEIT.Console.Utilities;
-using FACEIT.Core.Interfaces;
 using System.CommandLine;
 
 namespace FACEIT.Console.Commands.ClearAll
 {
     internal class ClearAllCommand : Command
     {
-        public ClearAllCommand() : base("clear", "Remove all the groups in the service")
+        private readonly IFaceServiceFactory _faceServiceFactory;
+        private readonly Option<string?> _endpointOption;
+        private readonly Option<string?> _apiKeyOption;
+
+        public ClearAllCommand(IFaceServiceFactory faceServiceFactory) : base("clear", "Remove all the groups in the service")
         {
-            var endpointOption = new Option<string>(
-                name: "--endpoint",
-                description: "The endpoint of Azure Face Service resource.")
-            {
-                IsRequired = false,
-            };
-            endpointOption.AddAlias("-e");
-            AddOption(endpointOption);
+            _faceServiceFactory = faceServiceFactory;
 
-            var apiKeyOption = new Option<string>(
-                name: "--api-key",
-                description: "The API key of Azure Face Service resource.")
+            _endpointOption = new Option<string?>("--endpoint", "-e")
             {
-                IsRequired = false,
+                Description = "The endpoint of Azure Face Service resource."
             };
-            apiKeyOption.AddAlias("-k");
-            AddOption(apiKeyOption);
+            Options.Add(_endpointOption);
 
-            this.SetHandler(CommandHandler, new GroupsManagerBinder(endpointOption, apiKeyOption));
+            _apiKeyOption = new Option<string?>("--api-key", "-k")
+            {
+                Description = "The API key of Azure Face Service resource."
+            };
+            Options.Add(_apiKeyOption);
+
+            this.SetAction(CommandHandler);
         }
 
-        private async Task CommandHandler( IGroupsManager groupsManager)
+        private async Task CommandHandler(ParseResult parseResult, CancellationToken cancellationToken)
         {
+            var endpoint = parseResult.GetValue(_endpointOption);
+            var apiKey = parseResult.GetValue(_apiKeyOption);
+
+            var groupsManager = _faceServiceFactory.CreateGroupsManager(endpoint, apiKey);
+
             ConsoleUtility.WriteLine("Are you sure you want to remove all the groups in the service? ([Y]yes/[N]no)");
-            var userAnswer=System.Console.ReadLine();
-            if (userAnswer.ToLower() != "y" && userAnswer.ToLower() != "yes")
+            var userAnswer = System.Console.ReadLine();
+            if (userAnswer?.ToLower() != "y" && userAnswer?.ToLower() != "yes")
             {
-                ConsoleUtility.WriteLine("Operation cancelled.",ConsoleColor.Yellow);
+                ConsoleUtility.WriteLine("Operation cancelled.", ConsoleColor.Yellow);
                 return;
             }
 
             ConsoleUtility.WriteLineWithTimestamp($"Removing all the groups in the service.");
 
-            var response = await groupsManager.ClearAllAsync();
+            var response = await groupsManager.ClearAllAsync(cancellationToken);
 
             if (response.Success)
             {
@@ -53,10 +57,5 @@ namespace FACEIT.Console.Commands.ClearAll
                 ConsoleUtility.WriteLineWithTimestamp($"Failed to clear the service. {response.Message}", ConsoleColor.Red);
             }
         }
-
-
-
     }
-
-
 }

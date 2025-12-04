@@ -1,66 +1,69 @@
-﻿using FACEIT.Console.Binders;
+﻿using FACEIT.Console.Services;
 using FACEIT.Console.Utilities;
-using FACEIT.Core.Entities;
-using FACEIT.Core.Interfaces;
 using System.CommandLine;
 
 namespace FACEIT.Console.Commands.RecognizePerson
 {
     internal class RecognizePersonCommand : Command
     {
-        public RecognizePersonCommand() : base("recognize", "Recognize an image and get the person id")
+        private readonly IFaceServiceFactory _faceServiceFactory;
+        private readonly Option<string?> _endpointOption;
+        private readonly Option<string?> _apiKeyOption;
+        private readonly Option<string> _groupIdOption;
+        private readonly Option<string> _imageFileOption;
+        private readonly Option<int> _confidenceOption;
+
+        public RecognizePersonCommand(IFaceServiceFactory faceServiceFactory) : base("recognize", "Recognize an image and get the person id")
         {
-            var endpointOption = new Option<string>(
-                name: "--endpoint",
-                description: "The endpoint of Azure Face Service resource.")
-            {
-                IsRequired = false,
-            };
-            endpointOption.AddAlias("-e");
-            AddOption(endpointOption);
+            _faceServiceFactory = faceServiceFactory;
 
-            var apiKeyOption = new Option<string>(
-                name: "--api-key",
-                description: "The API key of Azure Face Service resource.")
+            _endpointOption = new Option<string?>("--endpoint", "-e")
             {
-                IsRequired = false,
+                Description = "The endpoint of Azure Face Service resource."
             };
-            apiKeyOption.AddAlias("-k");
-            AddOption(apiKeyOption);
+            Options.Add(_endpointOption);
 
-            var groupIdOption = new Option<string>(
-                name: "--group-id",
-                description: "The id of the group.")
+            _apiKeyOption = new Option<string?>("--api-key", "-k")
             {
-                IsRequired = true,
+                Description = "The API key of Azure Face Service resource."
             };
-            groupIdOption.AddAlias("-gi");
-            AddOption(groupIdOption);
+            Options.Add(_apiKeyOption);
 
-            var imageFileOption = new Option<string>(
-                name: "--image-file",
-                description: "The file of the image to add to the person.")
+            _groupIdOption = new Option<string>("--group-id", "-gi")
             {
-                IsRequired = true,
+                Description = "The id of the group.",
+                Required = true
             };
-            imageFileOption.AddAlias("-f");
-            AddOption(imageFileOption);
+            Options.Add(_groupIdOption);
 
-            var confidenceOption = new Option<int>(
-                name: "--confidence",
-                description: "The confidence of the recognition (in percentage, between 0 and 100). The dafault value is 75.")
+            _imageFileOption = new Option<string>("--image-file", "-f")
             {
-                IsRequired = false,
+                Description = "The file of the image to add to the person.",
+                Required = true
             };
-            confidenceOption.AddAlias("-c");
-            confidenceOption.SetDefaultValue(75);
-            AddOption(confidenceOption);
+            Options.Add(_imageFileOption);
 
-            this.SetHandler(CommandHandler, groupIdOption, imageFileOption, confidenceOption, new PersonsManagerBinder(endpointOption, apiKeyOption), new FaceRecognizerBinder(endpointOption, apiKeyOption));
+            _confidenceOption = new Option<int>("--confidence", "-c")
+            {
+                Description = "The confidence of the recognition (in percentage, between 0 and 100). The dafault value is 75.",
+                DefaultValueFactory = _ => 75
+            };
+            Options.Add(_confidenceOption);
+
+            this.SetAction(CommandHandler);
         }
 
-        private async Task CommandHandler(string groupId, string imageFile, int confidence, IPersonsManager personsManager, IFaceRecognizer faceRecognizer)
+        private async Task CommandHandler(ParseResult parseResult, CancellationToken cancellationToken)
         {
+            var endpoint = parseResult.GetValue(_endpointOption);
+            var apiKey = parseResult.GetValue(_apiKeyOption);
+            var groupId = parseResult.GetValue(_groupIdOption)!;
+            var imageFile = parseResult.GetValue(_imageFileOption)!;
+            var confidence = parseResult.GetValue(_confidenceOption);
+
+            var personsManager = _faceServiceFactory.CreatePersonsManager(endpoint, apiKey);
+            var faceRecognizer = _faceServiceFactory.CreateFaceRecognizer(endpoint, apiKey);
+
             if (File.Exists(imageFile) == false)
             {
                 ConsoleUtility.WriteLineWithTimestamp($"Image file {imageFile} not found.", ConsoleColor.Red);
@@ -71,7 +74,7 @@ namespace FACEIT.Console.Commands.RecognizePerson
 
             using var imageStream = new FileStream(imageFile, FileMode.Open, FileAccess.Read);
 
-            var tempImageResponse = await faceRecognizer.DetectAsync(imageStream, 60);
+            var tempImageResponse = await faceRecognizer.DetectAsync(imageStream, 60, cancellationToken);
 
             if (!tempImageResponse.Success)
             {
@@ -81,7 +84,7 @@ namespace FACEIT.Console.Commands.RecognizePerson
 
             ConsoleUtility.WriteLineWithTimestamp($"Recognizing image in group {groupId}.");
 
-            var recognizeResponse = await faceRecognizer.RecognizeAsync(groupId, tempImageResponse.Data, confidence / 100.0f);
+            var recognizeResponse = await faceRecognizer.RecognizeAsync(groupId, tempImageResponse.Data ?? string.Empty, confidence / 100.0f, cancellationToken);
 
             if (!recognizeResponse.Success)
             {
@@ -89,7 +92,7 @@ namespace FACEIT.Console.Commands.RecognizePerson
                 return;
             }
 
-            if (recognizeResponse.Data.Any() == false)
+            if (recognizeResponse.Data == null || recognizeResponse.Data.Any() == false)
             {
                 ConsoleUtility.WriteLineWithTimestamp("No person recognized.", ConsoleColor.Yellow);
                 return;
@@ -99,8 +102,11 @@ namespace FACEIT.Console.Commands.RecognizePerson
             ConsoleUtility.WriteLine();
             foreach (var recognizedPerson in recognizeResponse.Data)
             {
-                var personResponse = await personsManager.GetPersonAsync(groupId, recognizedPerson.Id);
-                ConsoleUtility.DisplayRecognizedPerson(recognizedPerson, personResponse.Data);
+                var personResponse = await personsManager.GetPersonAsync(groupId, recognizedPerson.Id ?? string.Empty, cancellationToken);
+                if (personResponse.Data != null)
+                {
+                    ConsoleUtility.DisplayRecognizedPerson(recognizedPerson, personResponse.Data);
+                }
             }
         }
     }
