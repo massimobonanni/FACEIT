@@ -1,5 +1,6 @@
 ﻿using Azure;
 using Azure.AI.Vision.Face;
+using Azure.Identity;
 using FACEIT.Core.Entities;
 using FACEIT.Core.Interfaces;
 using FACEIT.FaceService.Entities;
@@ -20,6 +21,11 @@ namespace FACEIT.FaceService.Implementations
         private readonly HttpClient _httpClient;
         private readonly string _endpoint;
         private readonly string _apiKey;
+        private readonly string _clientId;
+        private readonly string _tenantId;
+        private readonly string _secret;
+        private readonly bool _useAzureAdAuth;
+
         private readonly ILogger<FacesManager> _logger;
         private FaceRecognitionModel _recognitionModel = FaceRecognitionModel.Recognition04; // https://learn.microsoft.com/en-us/azure/ai-services/computer-vision/how-to/specify-recognition-model
         private FaceDetectionModel _detectionModel = FaceDetectionModel.Detection03;// https://learn.microsoft.com/en-us/azure/ai-services/computer-vision/how-to/specify-detection-model
@@ -29,17 +35,52 @@ namespace FACEIT.FaceService.Implementations
             _httpClient = httpClient;
             _endpoint = endpoint.TrimEnd('/');
             _apiKey = apiKey;
+            _useAzureAdAuth = false;
             _logger = logger;
         }
 
         /// <summary>
-        /// Creates a LargePersonGroupClient for the specified group ID.
+        /// Initializes a new instance of the <see cref="FacesManager"/> class using Azure AD authentication.
         /// </summary>
-        /// <param name="groupId">The ID of the group.</param>
-        /// <returns>A LargePersonGroupClient instance.</returns>
+        /// <param name="httpClient">The HTTP client used for making requests.</param>
+        /// <param name="endpoint">The Azure Face API endpoint URL.</param>
+        /// <param name="clientId">The Azure AD application (client) ID.</param>
+        /// <param name="tenantId">The Azure AD tenant ID.</param>
+        /// <param name="secret">The Azure AD application client secret.</param>
+        /// <param name="logger">The logger instance for logging operations.</param>
+        public FacesManager(HttpClient httpClient, string endpoint, string clientId, string tenantId, string secret, ILogger<FacesManager> logger)
+        {
+            _httpClient = httpClient;
+            _endpoint = endpoint.TrimEnd('/');
+            _clientId = clientId;
+            _tenantId = tenantId;
+            _secret = secret;
+            _useAzureAdAuth = true;
+            _logger = logger;   
+        }
+
+        /// <summary>        
+        /// Creates a LargePersonGroupClient for the specified group ID using the configured authentication method.
+        /// The client is created with either Azure AD authentication (using client credentials) or API key authentication,
+        /// depending on the <see cref="_useAzureAdAuth"/> flag set during initialization.
+        /// </summary>
+        /// <param name="groupId">The ID of the group for which to create the client.</param>
+        /// <returns>A configured <see cref="LargePersonGroupClient"/> instance for the specified group, authenticated using the appropriate credentials.</returns>
         private LargePersonGroupClient CreateLargePersonGroupClient(string groupId)
         {
-            return new FaceAdministrationClient(new Uri(_endpoint), new AzureKeyCredential(_apiKey)).GetLargePersonGroupClient(groupId);
+            var endpointUri = new Uri(_endpoint);
+            FaceAdministrationClient client = null;
+            if (_useAzureAdAuth)
+            {
+                var credential = new ClientSecretCredential(_tenantId, _clientId, _secret);
+                client = new FaceAdministrationClient(endpointUri, credential);
+            }
+            else
+            {
+                var credential = new AzureKeyCredential(_apiKey);
+                client = new FaceAdministrationClient(endpointUri, credential);
+            }
+            return client.GetLargePersonGroupClient(groupId);
         }
 
         /// <summary>
@@ -65,7 +106,30 @@ namespace FACEIT.FaceService.Implementations
             var response = new Core.Entities.Response<T>();
 
             using var request = new HttpRequestMessage(method, url);
-            request.Headers.Add("Ocp-Apim-Subscription-Key", _apiKey);
+
+            // Use EntraID token authentication if credentials are available, otherwise use API key
+            if (_useAzureAdAuth)
+            {
+                try
+                {
+                    var credential = new ClientSecretCredential(_tenantId, _clientId, _secret);
+                    var tokenRequestContext = new Azure.Core.TokenRequestContext(new[] { "https://cognitiveservices.azure.com/.default" });
+                    var accessToken = await credential.GetTokenAsync(tokenRequestContext, token);
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error sending request to {url}", url);
+                    response.Success = false;
+                    response.Message = ex.Message;
+                    return response;
+                }
+            }
+            else
+            {
+                request.Headers.Add("Ocp-Apim-Subscription-Key", _apiKey);
+            }
+
             if (content != null)
                 request.Content = content;
 

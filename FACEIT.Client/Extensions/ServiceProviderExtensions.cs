@@ -23,6 +23,10 @@ namespace Microsoft.Extensions.DependencyInjection
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
                 var logger = loggerFactory.CreateLogger<FacesManager>();
                 var config = FacesManagerConfiguration.Load(sp.GetRequiredService<IConfiguration>());
+                if (config.UseIdentityAuthorization)
+                {
+                    return new FacesManager(httpClient, config.Endpoint, config.ClientId, config.TenantId, config.ClientSecret, logger);
+                }
                 return new FacesManager(httpClient, config.Endpoint, config.Key, logger);
             });
             return services;
@@ -36,6 +40,10 @@ namespace Microsoft.Extensions.DependencyInjection
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
                 var logger = loggerFactory.CreateLogger<FacesManager>();
                 var config = FacesManagerConfiguration.Load(sp.GetRequiredService<IConfiguration>());
+                if (config.UseIdentityAuthorization)
+                {
+                    return new FacesManager(httpClient, config.Endpoint, config.ClientId, config.TenantId, config.ClientSecret, logger);
+                }
                 return new FacesManager(httpClient, config.Endpoint, config.Key, logger);
             });
             return services;
@@ -49,6 +57,10 @@ namespace Microsoft.Extensions.DependencyInjection
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
                 var logger = loggerFactory.CreateLogger<FacesManager>();
                 var config = FacesManagerConfiguration.Load(sp.GetRequiredService<IConfiguration>());
+                if (config.UseIdentityAuthorization)
+                {
+                    return new FacesManager(httpClient, config.Endpoint, config.ClientId, config.TenantId, config.ClientSecret, logger);
+                }
                 return new FacesManager(httpClient, config.Endpoint, config.Key, logger);
             });
             return services;
